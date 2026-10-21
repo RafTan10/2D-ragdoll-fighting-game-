@@ -241,7 +241,8 @@ weapon fixed joints are rebuilt) so both face each other again. Jumps tuck the l
 still collides, so clearing the opponent depends on distance and their guard.
 
 Damage only comes from a weapon's **striking part** (blade / head / fist) moving fast at the contact point
-(≥ `minImpactSpeed`, default 2.5 m/s, and impulse ≥ 1.2 N·s): damage × (impulse / 5 N·s, clamped 0.3–1.8)
+(≥ `minImpactSpeed`, default 2.5 m/s, and impulse ≥ 2 N·s), and only while its hand is attacking
+(`Hand.Striking` — touching, guarding or resting never hurts; a lowered shield doesn't block): damage × (impulse / 5 N·s, clamped 0.3–1.8)
 × body part (head 1.5) × armour. Heavier weapons hit harder at the same speed.
 Weapon on weapon or shield = block (sparks, clank, blocker loses stamina). A helpless (down / fainted) fighter's
 flailing never deals damage.
