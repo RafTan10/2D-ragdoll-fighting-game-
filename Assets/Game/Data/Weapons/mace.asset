@@ -16,8 +16,9 @@ MonoBehaviour:
   type: 3
   sprite: {fileID: 21300000, guid: 2ce320b1e08fab9449b5b59e4065f810, type: 3}
   damage: 15
-  mass: 1.2
+  mass: 2
   minImpactSpeed: 2.5
   twoHanded: 0
   gripAngle: 75
   gripPixels: 4
+  strikeFrom: -1

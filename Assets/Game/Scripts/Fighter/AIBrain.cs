@@ -18,7 +18,30 @@ public class AIBrain : IFighterBrain
     float move;
     bool hop, jump, blocking;
 
+    /// <summary>What the AI noticed about its opponent at one moment.</summary>
+    struct Seen { public float time; public Vector2 torso, head, weapon; public bool swinging, helpless; }
+    readonly System.Collections.Generic.List<Seen> memory = new System.Collections.Generic.List<Seen>();
+    Seen seen;
+
     public AIBrain(AIProfile profile) { this.profile = profile; }
+
+    /// <summary>
+    /// Like a person, the AI reacts to what it saw a moment ago, not to this exact frame: observations go into a
+    /// short memory and it acts on the one that is <c>reactionTime × 0.6</c> old.
+    /// </summary>
+    void Observe(Fighter opponent, float now)
+    {
+        var weapon = opponent.MainHand.weaponObject;
+        memory.Add(new Seen
+        {
+            time = now, torso = opponent.Torso.position, head = opponent.Head.position,
+            weapon = weapon != null ? (Vector2)weapon.transform.position : opponent.Torso.position,
+            swinging = opponent.MainHand.Active, helpless = opponent.IsHelpless
+        });
+        float delay = profile.reactionTime * 0.6f;
+        while (memory.Count > 1 && memory[1].time <= now - delay) memory.RemoveAt(0);
+        seen = memory[0];
+    }
 
     public FighterInput Think(Fighter self, Fighter opponent)
     {
@@ -26,14 +49,15 @@ public class AIBrain : IFighterBrain
         if (opponent == null || opponent.IsKnockedOut) return input;
 
         float now = Time.time;
-        float dx = opponent.Torso.position.x - self.Torso.position.x;
+        Observe(opponent, now);
+        float dx = seen.torso.x - self.Torso.position.x;
         float dist = Mathf.Abs(dx);
         float dir = Mathf.Sign(dx);
         float reach = self.Reach;
         float stamina = self.Stamina / self.MaxStamina;
 
         // ---- choose a plan
-        if (opponent.IsHelpless) plan = Plan.Punish;
+        if (seen.helpless) plan = Plan.Punish;
         else if (plan == Plan.Recover) { if (stamina > 0.6f) plan = Plan.Engage; }
         else plan = stamina < 0.28f ? Plan.Recover : Plan.Engage;
 
@@ -59,8 +83,7 @@ public class AIBrain : IFighterBrain
         // ---- off hand: shield block or a second-weapon jab
         if (self.HasShield)
         {
-            var threat = opponent.MainHand.weaponObject != null ? (Vector2)opponent.MainHand.weaponObject.transform.position : opponent.Torso.position;
-            bool threatened = opponent.MainHand.Active && Vector2.Distance(threat, self.Torso.position) < opponent.Reach * 1.4f;
+            bool threatened = seen.swinging && Vector2.Distance(seen.weapon, self.Torso.position) < opponent.Reach * 1.4f;
             // Notice the threat with a per-second chance, then keep the guard up while it lasts. Tired = more careful.
             float chance = profile.blockChance * (plan == Plan.Recover ? 2f : 1f) * 6f * Time.deltaTime;
             if (!threatened) blocking = false;
@@ -127,11 +150,12 @@ public class AIBrain : IFighterBrain
                                 : r < 0.9f || stamina < 0.6f ? SwingMove.Kind.Thrust
                                 : SwingMove.Kind.Spin;
             if (plan == Plan.Punish) kind = SwingMove.Kind.Chop;
-            mainSwing.Start(kind, Random.Range(profile.windUp.x, profile.windUp.y));
+            if (mainSwing.Start(kind, Random.Range(profile.windUp.x, profile.windUp.y)))
+                mainSwing.AimOffset = Random.insideUnitCircle * profile.aimError; // nobody aims perfectly
         }
 
         // No shield: sometimes parry an incoming swing with the weapon instead.
-        if (!self.HasShield && opponent.MainHand.Active && !mainSwing.Running && dist < opponent.Reach * 1.3f
+        if (!self.HasShield && seen.swinging && !mainSwing.Running && dist < opponent.Reach * 1.3f
             && Random.value < profile.blockChance * 0.6f)
             parryUntil = now + 0.35f;
 

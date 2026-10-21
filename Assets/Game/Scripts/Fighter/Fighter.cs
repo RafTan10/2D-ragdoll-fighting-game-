@@ -121,6 +121,7 @@ public class Fighter : MonoBehaviour
 
     void FixedUpdate()
     {
+        FallThud();
         if (IsKnockedOut) return;
         float dt = Time.fixedDeltaTime;
 
@@ -132,17 +133,31 @@ public class Fighter : MonoBehaviour
         }
 
         Locomotion.FaceOpponent(dt);
-        float fatigue = Fatigue;
-        Arms.Tick(fatigue);
+        // Everything the muscles do is scaled by tiredness and by stagger from recent hits.
+        Balance.RecoverMuscle(dt);
+        float strength = Fatigue * Balance.Muscle;
+        Arms.Tick(strength);
         Body.Neck.To(0f, Facing, 8f, 300f);
 
         bool grounded = Body.IsGrounded();
-        Locomotion.TickLegs(dt, fatigue, grounded);
-        Balance.Tick(fatigue, Locomotion.SteppingDir);
+        Locomotion.TickLegs(dt, strength, grounded);
+        Balance.Tick(strength, Locomotion.SteppingDir, grounded);
         if (grounded) Locomotion.Footwork(dt);
+        else Locomotion.AirControl();
         Locomotion.TickJumps(dt, grounded);
         Knockdown.CheckTipped(dt);
     }
+
+    /// <summary>A falling body hitting the floor goes thud, once per fall.</summary>
+    void FallThud()
+    {
+        if (!IsHelpless) { thudded = false; return; }
+        if (thudded || !Body.BodyOnGround()) return;
+        thudded = true;
+        GameFeel.Play(GameFeel.Sound.Thud, Mathf.Clamp01(0.4f + Mathf.Abs(Torso.linearVelocity.y) * 0.15f));
+    }
+
+    bool thudded;
 
     // ================================================================ used by the components and by combat
 
@@ -167,7 +182,12 @@ public class Fighter : MonoBehaviour
     {
         if (IsKnockedOut) return;
         Health = Mathf.Max(0f, Health - amount);
-        if (part != null) Flash(part.GetComponent<SpriteRenderer>());
+        if (part != null)
+        {
+            var sr = part.GetComponent<SpriteRenderer>();
+            Body.Bruise(sr, amount);
+            Flash(sr);
+        }
         if (Health <= 0f) { KnockOut(); return; }
         Knockdown.OnDamaged(amount);
     }

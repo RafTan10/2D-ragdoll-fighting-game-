@@ -33,7 +33,18 @@ public class BloodFX : MonoBehaviour
     static readonly Color[] SparkColors = { new Color(1f, 0.95f, 0.6f), new Color(1f, 0.75f, 0.2f), Color.white };
     static readonly Color[] DustColors = { new Color(0.72f, 0.7f, 0.64f), new Color(0.6f, 0.58f, 0.53f), new Color(0.82f, 0.8f, 0.74f) };
 
-    public static void Spray(Vector2 at, Vector2 direction, int count) => Emit(Kind.Blood, at, direction, count, 1.6f);
+    public enum BloodLevel { Off, Low, Normal }
+    /// <summary>How much blood to show. Low halves it; Off shows none (sparks and dust stay). Toggle with B in a match.</summary>
+    public static BloodLevel Level = BloodLevel.Low;
+    /// <summary>Seconds a floor stain stays before fading out (the last 2 s fade).</summary>
+    public static float StainSeconds = 10f;
+
+    public static void Spray(Vector2 at, Vector2 direction, int count)
+    {
+        if (Level == BloodLevel.Off) return;
+        if (Level == BloodLevel.Low) count = Mathf.CeilToInt(count * 0.5f);
+        Emit(Kind.Blood, at, direction, count, 1.6f);
+    }
 
     public static void Sparks(Vector2 at, int count) => Emit(Kind.Spark, at, Vector2.up, count, 2.8f);
 
@@ -103,7 +114,15 @@ public class BloodFX : MonoBehaviour
         float dt = Time.deltaTime;
         foreach (var d in drops)
         {
-            if (d.landed || !d.renderer.enabled) continue;
+            if (!d.renderer.enabled) continue;
+            if (d.landed)
+            {
+                // Floor stains fade over their last 2 seconds, then free their slot.
+                d.life -= dt;
+                if (d.life <= 0f) { d.renderer.enabled = false; d.landed = false; continue; }
+                if (d.life < 2f) { var s = d.color * 0.75f; s.a = d.life / 2f; d.renderer.color = s; }
+                continue;
+            }
 
             if (d.kind != Kind.Blood)
             {
@@ -125,6 +144,7 @@ public class BloodFX : MonoBehaviour
                 d.renderer.sortingOrder = -60;
                 d.transform.localScale = new Vector3(Random.Range(2, 5), 1f, 1f); // splat flat
                 d.renderer.color = d.color * 0.75f;
+                d.life = StainSeconds * Random.Range(0.85f, 1.15f);
             }
             else if (p.y <= 0f) { d.renderer.enabled = false; continue; }
             d.transform.position = p;

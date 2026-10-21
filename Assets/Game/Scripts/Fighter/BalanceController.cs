@@ -1,8 +1,12 @@
 using UnityEngine;
 
 /// <summary>
-/// Keeps the fighter upright: a spring-and-brake torque on the torso towards a lean angle, and a
-/// head-up / feet-down force couple that gives a strong righting torque without lifting the body.
+/// The fighter's "muscles" for staying up. Three parts, all scaled by <see cref="Muscle"/> (which drops when hit,
+/// so blows visibly rock the body) and by tiredness:
+/// - a spring-and-brake torque on the torso towards a lean angle,
+/// - a hip-height support force: the legs push the torso up towards a crouched height (and the feet down by the
+///   same amount, so it's the legs doing the work, not a magic lift),
+/// - a head-up / feet-down force couple that gives a righting torque without lifting the body.
 /// </summary>
 public class BalanceController : MonoBehaviour
 {
@@ -16,25 +20,54 @@ public class BalanceController : MonoBehaviour
     [Tooltip("Brake on the torso's spin.")]
     [SerializeField] float torsoDamping = 4f;
 
+    [Header("Hip-height support (the legs holding the body up)")]
+    [Tooltip("Torso height the legs hold, as a share of the spawn (straight-legged) height.")]
+    [SerializeField] float supportShare = 0.9f;
+    [Tooltip("Spring: acceleration per unit of height error.")]
+    [SerializeField] float supportStiffness = 60f;
+    [Tooltip("Brake on vertical speed.")]
+    [SerializeField] float supportDamping = 12f;
+    [Tooltip("Cap, as a multiple of body weight.")]
+    [SerializeField] float supportMaxWeights = 1.3f;
+    [Tooltip("How far the hips dip on landing, as a share of the support height.")]
+    [SerializeField] float landingSquash = 0.12f;
+    [SerializeField] float landingSquashTime = 0.15f;
+
     [Header("Righting couple")]
     [Tooltip("Head pulled up and feet pushed down with this many newtons per kg of fighter.")]
     [SerializeField] float balancePerKg = 8.5f;
     [Tooltip("Damps the head's sideways sway.")]
     [SerializeField] float headSwayDamping = 3f;
 
+    [Header("Stagger")]
+    [Tooltip("Seconds for the muscles to recover fully from a stagger.")]
+    [SerializeField] float staggerRecovery = 0.6f;
+
     /// <summary>The torso angle (world, degrees) the balance is aiming for this step.</summary>
     public float LeanTarget { get; private set; }
+    /// <summary>0..1 muscle strength: 1 normally, drops when hit and recovers.</summary>
+    public float Muscle { get; private set; } = 1f;
 
     Fighter fighter;
+    float squashUntil;
 
     public void Init(Fighter owner) => fighter = owner;
 
+    /// <summary>A hit rocks the fighter: muscles drop to <paramref name="strength"/> and recover over time.</summary>
+    public void Stagger(float strength) => Muscle = Mathf.Min(Muscle, Mathf.Clamp01(strength));
+
+    public void Land() => squashUntil = Time.time + landingSquashTime;
+
+    public void RecoverMuscle(float dt) => Muscle = Mathf.MoveTowards(Muscle, 1f, dt / Mathf.Max(0.01f, staggerRecovery));
+
+    /// <param name="strength">Tiredness × muscle, 0..1.</param>
     /// <param name="stepDir">-1/+1 while stepping (world direction), 0 otherwise.</param>
-    public void Tick(float fatigue, float stepDir)
+    public void Tick(float strength, float stepDir, bool grounded)
     {
         LeanTarget = -fighter.Facing * guardLean - stepDir * stepLean;
-        TorqueTowardLean(fatigue, 1f, 1f);
-        ApplyBalanceCouple(fatigue);
+        TorqueTowardLean(strength, 1f, 1f);
+        if (grounded) SupportHips(strength);
+        ApplyBalanceCouple(strength);
     }
 
     /// <summary>While getting up: guard lean with a much stronger torso spring.</summary>
@@ -54,7 +87,22 @@ public class BalanceController : MonoBehaviour
         torso.AddTorque(torque * strength);
     }
 
-    /// <summary>Head up, feet down — no net lift, but a strong righting torque. Tired fighters sag.</summary>
+    /// <summary>The legs push the torso towards a crouched height above the floor, and the feet into the floor.</summary>
+    void SupportHips(float strength)
+    {
+        var body = fighter.Body;
+        var torso = body.Torso;
+        float target = body.StandingHeight * supportShare * (Time.time < squashUntil ? 1f - landingSquash : 1f);
+        float height = torso.position.y; // the floor is at y = 0
+        float accel = supportStiffness * (target - height) - supportDamping * torso.linearVelocity.y;
+        float force = Mathf.Clamp(accel * body.TotalMass, -body.TotalMass * 9.81f, body.TotalMass * 9.81f * supportMaxWeights) * strength;
+        if (force <= 0f) return; // legs push, they don't pull the body down
+        torso.AddForce(Vector2.up * force);
+        body.FrontLeg.foot.AddForce(Vector2.down * force * 0.5f);
+        body.BackLeg.foot.AddForce(Vector2.down * force * 0.5f);
+    }
+
+    /// <summary>Head up, feet down — no net lift, but a strong righting torque. Tired or staggered fighters sag.</summary>
     public void ApplyBalanceCouple(float strength)
     {
         var body = fighter.Body;

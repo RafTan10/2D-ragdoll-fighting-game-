@@ -8,11 +8,19 @@ public static class GameFeel
 {
     static float hitStopUntil, slowMoUntil;
 
+    /// <summary>
+    /// Physics step at normal speed. 0.01 s (100 Hz) keeps the long joint chains (torso › arm › forearm › weapon)
+    /// stiff and crisp; 0.02 made them soft.
+    /// </summary>
+    public const float BaseFixedDelta = 0.01f;
+
     /// <summary>Briefly freeze the action (a heavy hit lands).</summary>
     public static void HitStop(float seconds) => hitStopUntil = Mathf.Max(hitStopUntil, Time.unscaledTime + seconds);
 
     /// <summary>Slow motion, e.g. on a knockout.</summary>
     public static void SlowMo(float seconds) => slowMoUntil = Mathf.Max(slowMoUntil, Time.unscaledTime + seconds);
+
+    public static bool InSlowMotion => Time.unscaledTime < slowMoUntil;
 
     public static void Tick()
     {
@@ -21,7 +29,7 @@ public static class GameFeel
         if (!Mathf.Approximately(Time.timeScale, scale))
         {
             Time.timeScale = scale;
-            Time.fixedDeltaTime = 0.02f * Mathf.Max(scale, 0.35f);
+            Time.fixedDeltaTime = BaseFixedDelta * Mathf.Max(scale, 0.35f);
         }
     }
 
@@ -29,15 +37,16 @@ public static class GameFeel
     {
         hitStopUntil = slowMoUntil = 0f;
         Time.timeScale = 1f;
-        Time.fixedDeltaTime = 0.02f;
+        Time.fixedDeltaTime = BaseFixedDelta;
     }
 
     // ================================================================ sound
 
-    public enum Sound { Flesh, Metal, Wood, Whoosh }
+    /// <summary>Flesh hit, armour/metal hit, shield block, fast swing, body hitting the ground.</summary>
+    public enum Sound { Flesh, Metal, Wood, Whoosh, Thud }
 
     static AudioSource source;
-    static AudioClip flesh, metal, wood, whoosh;
+    static AudioClip flesh, metal, wood, whoosh, thud;
 
     public static void Play(Sound sound, float volume)
     {
@@ -50,7 +59,8 @@ public static class GameFeel
             source.playOnAwake = false;
             BuildClips();
         }
-        var clip = sound == Sound.Flesh ? flesh : sound == Sound.Metal ? metal : sound == Sound.Wood ? wood : whoosh;
+        var clip = sound == Sound.Flesh ? flesh : sound == Sound.Metal ? metal : sound == Sound.Wood ? wood
+                 : sound == Sound.Thud ? thud : whoosh;
         source.pitch = Random.Range(0.88f, 1.12f);
         source.PlayOneShot(clip, Mathf.Clamp01(volume));
     }
@@ -77,6 +87,11 @@ public static class GameFeel
         {
             float env = Mathf.Exp(-t * 18f);
             return (Mathf.Sin(2f * Mathf.PI * 180f * t) * 0.7f + Mathf.Sin(2f * Mathf.PI * 410f * t) * 0.3f + Noise() * 0.35f) * env;
+        });
+        thud = Make("BodyFall", rate, 0.35f, (t, i) =>
+        {
+            float env = Mathf.Exp(-t * 12f);
+            return (Mathf.Sin(2f * Mathf.PI * (60f - t * 60f) * t) * 0.9f + Noise() * 0.3f * Mathf.Exp(-t * 40f)) * env;
         });
         float lp = 0f;
         whoosh = Make("Whoosh", rate, 0.3f, (t, i) =>

@@ -17,14 +17,30 @@ public class RagdollBody : MonoBehaviour
     [Tooltip("Arms must stay heavy relative to the weapon they hold, or the joint solver jitters.")]
     [SerializeField] float upperArmMass = 1.6f;
     [SerializeField] float lowerArmMass = 1.2f;
-    [SerializeField] float upperLegMass = 1f;
-    [SerializeField] float lowerLegMass = 0.9f;
+    [Tooltip("Legs heavier than arms, like a real body: a top-heavy ragdoll gets pushed around and its feet slide.")]
+    [SerializeField] float upperLegMass = 1.8f;
+    [SerializeField] float lowerLegMass = 1.2f;
 
     [Header("Muscle strength (motor torque caps)")]
-    [SerializeField] float shoulderTorque = 110f;
-    [SerializeField] float elbowTorque = 65f;
-    [SerializeField] float legTorque = 170f;
+    [Tooltip("Shoulder torque is what limits a swing: a heavier weapon gets up to speed more slowly.")]
+    [SerializeField] float shoulderTorque = 70f;
+    [SerializeField] float elbowTorque = 45f;
+    [SerializeField] float legTorque = 200f;
     [SerializeField] float neckTorque = 18f;
+
+    [Header("Physics")]
+    [Tooltip("Spin damping on every limb, so flailing settles instead of going on forever.")]
+    [SerializeField] float limbAngularDamping = 0.6f;
+    [Tooltip("Gravity multiplier. Fighters are ~1.8 units tall, so 1 is real-world gravity for their size.")]
+    [SerializeField] float gravityScale = 1f;
+    [Tooltip("Friction of the feet (lower legs). High so feet grip instead of skating.")]
+    [SerializeField] float feetFriction = 1f;
+    [Tooltip("Friction of the rest of the body.")]
+    [SerializeField] float bodyFriction = 0.4f;
+    [Tooltip("Friction of weapons, low so blades glance off instead of sticking.")]
+    [SerializeField] float weaponFriction = 0.2f;
+
+    PhysicsMaterial2D feetMaterial, bodyMaterial, weaponMaterial;
 
     public Rigidbody2D Torso { get; private set; }
     public Rigidbody2D Head { get; private set; }
@@ -58,6 +74,9 @@ public class RagdollBody : MonoBehaviour
         definition = def;
         Facing = facing;
         float w = def.weight;
+        feetMaterial = new PhysicsMaterial2D("Feet") { friction = feetFriction, bounciness = 0f };
+        bodyMaterial = new PhysicsMaterial2D("Body") { friction = bodyFriction, bounciness = 0f };
+        weaponMaterial = new PhysicsMaterial2D("Weapon") { friction = weaponFriction, bounciness = 0f };
 
         float lowerLegH = Height(def.lowerLeg), upperLegH = Height(def.upperLeg);
         float torsoH = Height(def.torso), upperArmH = Height(def.upperArm), lowerArmH = Height(def.lowerArm);
@@ -99,6 +118,26 @@ public class RagdollBody : MonoBehaviour
 
         float weaponLength = mainWeapon != null && !mainWeapon.IsShield ? Height(mainWeapon.sprite) : 0.1f;
         Reach = upperArmH + lowerArmH + weaponLength * 0.8f + 0.2f;
+
+        // Feet grip, weapons glance, everything else in between.
+        foreach (var col in FrontLeg.foot.GetComponents<Collider2D>()) col.sharedMaterial = feetMaterial;
+        foreach (var col in BackLeg.foot.GetComponents<Collider2D>()) col.sharedMaterial = feetMaterial;
+        MainHand.lower.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        OffHand.lower.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        WarnIfOutsideLimits();
+    }
+
+    /// <summary>A joint that starts outside its limits snaps violently on the first step; say so.</summary>
+    void WarnIfOutsideLimits()
+    {
+        foreach (var d in drives)
+        {
+            if (!d.joint.useLimits) continue;
+            float a = d.joint.jointAngle;
+            var l = d.joint.limits;
+            if (a < l.min - 0.5f || a > l.max + 0.5f)
+                Debug.LogWarning($"{name}: joint {d.body.name} starts at {a:F1}°, outside its limits {l.min:F0}..{l.max:F0}");
+        }
     }
 
     Leg MakeLeg(string side, Vector2 hip, Vector2 knee, int order, Color tint, Material material)
@@ -180,10 +219,15 @@ public class RagdollBody : MonoBehaviour
             weapon.strikeCollider = strike;
         }
 
+        foreach (var col in go.GetComponents<Collider2D>()) col.sharedMaterial = weaponMaterial;
+
         var rb = go.AddComponent<Rigidbody2D>();
         rb.mass = def.mass;
+        rb.gravityScale = gravityScale;
+        rb.angularDamping = limbAngularDamping;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.sleepMode = RigidbodySleepMode2D.StartAwake;
         Bodies.Add(rb);
 
         var fixedJoint = go.AddComponent<FixedJoint2D>();
@@ -249,9 +293,14 @@ public class RagdollBody : MonoBehaviour
             box.offset = new Vector2(r.center.x * Facing, r.center.y);
         }
 
+        foreach (var col in go.GetComponents<Collider2D>()) col.sharedMaterial = bodyMaterial;
+
         var rb = go.AddComponent<Rigidbody2D>();
         rb.mass = mass;
+        rb.gravityScale = gravityScale;
+        rb.angularDamping = limbAngularDamping;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        rb.sleepMode = RigidbodySleepMode2D.StartAwake;
         Bodies.Add(rb);
 
         var part = go.AddComponent<BodyPart>();
@@ -303,6 +352,21 @@ public class RagdollBody : MonoBehaviour
     }
 
     public bool TryGetBaseColor(SpriteRenderer sr, out Color color) => baseColors.TryGetValue(sr, out color);
+
+    /// <summary>Darkens a struck part a little towards a bruise red (new fighters are built each round, so it resets).</summary>
+    public void Bruise(SpriteRenderer sr, float damage)
+    {
+        if (sr == null || !baseColors.TryGetValue(sr, out var c)) return;
+        var bruise = new Color(c.r * 0.62f, c.g * 0.36f, c.b * 0.36f, c.a);
+        baseColors[sr] = Color.Lerp(c, bruise, Mathf.Clamp01(damage * 0.012f));
+    }
+
+    /// <summary>Torso or head touching the floor (a fallen body).</summary>
+    public bool BodyOnGround()
+    {
+        var ground = ArenaView.Ground;
+        return ground != null && (Torso.IsTouching(ground) || Head.IsTouching(ground));
+    }
 
     /// <summary>
     /// Mirrors every body about the torso's vertical axis and flips the facing. All joints are on the centre line

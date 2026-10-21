@@ -20,9 +20,14 @@ public class MatchManager : MonoBehaviour
     [Tooltip("Show the on-screen move / jump / hand buttons during fights.")]
     public bool showOnScreenControls = true;
 
+    [Tooltip("Rounds needed to win the match (2 = best of 3).")]
+    public int roundsToWin = 2;
+    [Tooltip("Seconds after a knockout before the next round (the body settles, slow motion plays).")]
+    public float roundEndDelay = 3f;
+
     OnScreenControls controls;
 
-    enum State { Select, Fighting, RoundOver }
+    enum State { Select, Fighting, RoundOver, MatchOver }
     State state = State.Select;
 
     Fighter player, enemy;
@@ -40,6 +45,8 @@ public class MatchManager : MonoBehaviour
         // Ragdoll chains (torso > arm > forearm > weapon) jitter badly with the default 8/3 solver iterations.
         Physics2D.velocityIterations = 20;
         Physics2D.positionIterations = 8;
+        GameFeel.Reset(); // also sets the 0.01 s physics step
+        if (GetComponent<HitFeedback>() == null) gameObject.AddComponent<HitFeedback>();
         if (autoStart) StartMatch();
     }
 
@@ -84,11 +91,13 @@ public class MatchManager : MonoBehaviour
         if (state != State.Fighting) return;
         bool playerWon = loser == enemy;
         if (playerWon) playerScore++; else enemyScore++;
-        roundMessage = (playerWon ? player : enemy).Definition.displayName + " wins!";
-        state = State.RoundOver;
-        roundOverTimer = 3f;
+        string winner = (playerWon ? player : enemy).Definition.displayName;
+        bool matchWon = playerScore >= roundsToWin || enemyScore >= roundsToWin;
+        roundMessage = matchWon ? winner + " wins the match!" : winner + " wins the round";
+        state = matchWon ? State.MatchOver : State.RoundOver;
+        roundOverTimer = matchWon ? roundEndDelay + 4f : roundEndDelay;
         GameFeel.SlowMo(1.2f); // knockout slow motion
-        if (rig != null) rig.Shake(0.08f);
+        if (rig != null) rig.AddTrauma(0.35f);
     }
 
     CameraRig rig;
@@ -98,10 +107,11 @@ public class MatchManager : MonoBehaviour
     {
         var kb = Keyboard.current;
         GameFeel.Tick();
-        if (state == State.RoundOver)
+        if (state == State.RoundOver || state == State.MatchOver)
         {
             roundOverTimer -= Time.unscaledDeltaTime;
-            if (roundOverTimer <= 0f) StartRound();
+            // Next round; after a match, a rematch (Esc goes back to the menu instead).
+            if (roundOverTimer <= 0f) { if (state == State.MatchOver) StartMatch(); else StartRound(); }
         }
         if (kb == null) return;
         if (kb.hKey.wasPressedThisFrame)
@@ -109,6 +119,9 @@ public class MatchManager : MonoBehaviour
             if (hitboxes == null) hitboxes = gameObject.AddComponent<HitboxOverlay>();
             else hitboxes.enabled = !hitboxes.enabled;
         }
+        if (kb.f3Key.wasPressedThisFrame) HitEvents.LogHits = !HitEvents.LogHits;
+        if (kb.bKey.wasPressedThisFrame) BloodFX.Level = (BloodFX.BloodLevel)(((int)BloodFX.Level + 1) % 3);
+        if (state == State.MatchOver && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) StartMatch();
         if (state != State.Select && kb.rKey.wasPressedThisFrame) StartRound();
         if (state != State.Select && kb.escapeKey.wasPressedThisFrame)
         {
@@ -183,7 +196,7 @@ public class MatchManager : MonoBehaviour
 
         GUI.Label(new Rect(0, 470, w, 60),
             "J / R button: right hand swings    K / L button: left hand swings (a shield blocks)    A: back   D: forward   Space: jump   Shift: lunge\n" +
-            "Free aim: hold left / right mouse and move the cursor.    H: show hitboxes    R: restart    Esc: menu", center);
+            "Free aim: hold left / right mouse.   H: hitboxes   B: blood off/low/normal   F3: log hits   R: restart round   Esc: menu", center);
     }
 
     static string Loadout(FighterDefinition f)
@@ -211,11 +224,16 @@ public class MatchManager : MonoBehaviour
         if (player == null || enemy == null) return;
         HealthBar(new Rect(20, 20, w * 0.4f, 22), player, false);
         HealthBar(new Rect(w - 20 - w * 0.4f, 20, w * 0.4f, 22), enemy, true);
-        GUI.Label(new Rect(w * 0.5f - 50f, 14, 100, 34), playerScore + " - " + enemyScore, center);
+        GUI.Label(new Rect(w * 0.5f - 60f, 14, 120, 34), playerScore + " - " + enemyScore, center);
+        GUI.Label(new Rect(w * 0.5f - 90f, 40, 180, 24), "Best of " + (roundsToWin * 2 - 1), SmallCentered());
 
-        if (state == State.RoundOver)
+        if (state == State.RoundOver || state == State.MatchOver)
             GUI.Label(new Rect(0, 200, w, 60), roundMessage, big);
+        if (state == State.MatchOver)
+            GUI.Label(new Rect(0, 262, w, 30), "Enter: rematch    Esc: menu", center);
     }
+
+    GUIStyle SmallCentered() => new GUIStyle(normal) { alignment = TextAnchor.MiddleCenter, fontSize = 13 };
 
     void HealthBar(Rect r, Fighter f, bool rightAligned)
     {

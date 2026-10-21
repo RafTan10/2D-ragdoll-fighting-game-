@@ -11,6 +11,8 @@ public class SwingMove
 
     public bool Running { get; private set; }
     public Kind Current { get; private set; }
+    /// <summary>Added to the target of aimed moves (thrusts): how far off this attempt is. Set after Start.</summary>
+    public Vector2 AimOffset;
 
     float startTime, windUp;
     float spinAngle;
@@ -21,10 +23,10 @@ public class SwingMove
         if (Running) return false;
         Running = true;
         Current = kind;
+        AimOffset = Vector2.zero;
         startTime = Time.time;
         windUp = Mathf.Max(0.08f, windUpSeconds);
         spinAngle = 30f;
-        GameFeel.Play(GameFeel.Sound.Whoosh, 0.25f);
         return true;
     }
 
@@ -70,7 +72,7 @@ public class SwingMove
                 if (t < windUp) aim = Polar(self, 70f, reach * 0.4f);
                 else if (t < windUp + lunge)
                 {
-                    Vector2 target = opponent != null ? opponent.Head.position - hand.ShoulderPosition : Polar(self, 95f, reach);
+                    Vector2 target = opponent != null ? opponent.Head.position + AimOffset - hand.ShoulderPosition : Polar(self, 95f, reach);
                     aim = target.normalized * reach;
                 }
                 else { Running = false; return false; }

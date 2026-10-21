@@ -41,16 +41,17 @@ public static class ContentTools
 
         if (db.aiProfiles.Count == 0)
         {
-            db.aiProfiles.Add(MakeAI("Easy", 0.6f, new Vector2(0.5f, 0.9f), new Vector2(0.8f, 1.5f), 0.35f, 0.15f, 0.05f, 0.7f));
-            db.aiProfiles.Add(MakeAI("Normal", 0.35f, new Vector2(0.3f, 0.6f), new Vector2(0.4f, 0.9f), 0.6f, 0.4f, 0.1f, 1f));
-            db.aiProfiles.Add(MakeAI("Hard", 0.18f, new Vector2(0.2f, 0.4f), new Vector2(0.2f, 0.5f), 0.85f, 0.7f, 0.15f, 1.2f));
+            // Reaction time × 0.6 is how stale the AI's view of the opponent is (0.36 / 0.21 / 0.11 s).
+            db.aiProfiles.Add(MakeAI("Easy", 0.6f, new Vector2(0.5f, 0.9f), new Vector2(0.8f, 1.5f), 0.35f, 0.15f, 0.05f, 0.7f, 0.3f));
+            db.aiProfiles.Add(MakeAI("Normal", 0.35f, new Vector2(0.3f, 0.6f), new Vector2(0.4f, 0.9f), 0.6f, 0.4f, 0.1f, 1f, 0.15f));
+            db.aiProfiles.Add(MakeAI("Hard", 0.18f, new Vector2(0.2f, 0.4f), new Vector2(0.2f, 0.5f), 0.85f, 0.7f, 0.15f, 1.2f, 0.07f));
         }
         EditorUtility.SetDirty(db);
         return db;
     }
 
     static AIProfile MakeAI(string name, float reaction, Vector2 windUp, Vector2 recovery, float aggression,
-                            float block, float hop, float damage)
+                            float block, float hop, float damage, float aimError)
     {
         string path = DataRoot + "/AI/" + name + ".asset";
         var ai = AssetDatabase.LoadAssetAtPath<AIProfile>(path);
@@ -68,6 +69,7 @@ public static class ContentTools
         ai.blockChance = block;
         ai.hopChance = hop;
         ai.damageMultiplier = damage;
+        ai.aimError = aimError;
         EditorUtility.SetDirty(ai);
         return ai;
     }
@@ -187,12 +189,13 @@ public static class ContentTools
     {
         switch (w.type)
         {
-            case WeaponType.Dagger: Set(w, 8f, 0.3f, 2f, 80f, 2f, false); break;
-            case WeaponType.Sword: Set(w, 13f, 0.7f, 2.5f, 80f, 2f, false); break;
-            case WeaponType.Axe: Set(w, 17f, 1.1f, 2.5f, 75f, 2f, false); break;
-            case WeaponType.Mace: Set(w, 15f, 1.2f, 2.5f, 75f, 2f, false); break;
-            case WeaponType.Hammer: Set(w, 20f, 1.6f, 3f, 70f, 2f, true); break;
-            case WeaponType.Shield: Set(w, 0f, 1f, 99f, 90f, 0f, false); break;
+            // Masses are real-ish: they decide swing speed and how hard a hit lands.
+            case WeaponType.Dagger: Set(w, 8f, 0.45f, 2f, 80f, 2f, false); break;
+            case WeaponType.Sword: Set(w, 13f, 1.0f, 2.5f, 80f, 2f, false); break;
+            case WeaponType.Axe: Set(w, 17f, 1.6f, 2.5f, 75f, 2f, false); break;
+            case WeaponType.Mace: Set(w, 15f, 2.0f, 2.5f, 75f, 2f, false); break;
+            case WeaponType.Hammer: Set(w, 20f, 2.4f, 3f, 70f, 2f, true); break;
+            case WeaponType.Shield: Set(w, 0f, 1.5f, 99f, 90f, 0f, false); break;
         }
     }
 

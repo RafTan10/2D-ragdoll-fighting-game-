@@ -19,4 +19,5 @@ MonoBehaviour:
   aggression: 0.6
   blockChance: 0.4
   hopChance: 0.1
+  aimError: 0.15
   damageMultiplier: 1

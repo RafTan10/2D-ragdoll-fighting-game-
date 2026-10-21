@@ -34,6 +34,8 @@ public class LocomotionController : MonoBehaviour
     [SerializeField] float lungeUp = 3f;
     [SerializeField] float lungeForward = 3.4f;
     [SerializeField] float lungeStaminaCost = 7f;
+    [Tooltip("Share of the ground push available for steering in the air.")]
+    [SerializeField] float airControl = 0.15f;
 
     [Header("Turning round")]
     [Tooltip("Seconds the opponent must be behind before the fighter turns.")]
@@ -45,7 +47,7 @@ public class LocomotionController : MonoBehaviour
     Fighter fighter;
     float stepTimer, stepDir;
     int stepCount;
-    float hopCooldown, crossedTime;
+    float hopCooldown, crossedTime, airTime;
     bool hopQueued, jumpQueued;
 
     public void Init(Fighter owner) => fighter = owner;
@@ -67,8 +69,22 @@ public class LocomotionController : MonoBehaviour
 
     public void TickLegs(float dt, float fatigue, bool grounded)
     {
+        // Landing after a real flight: dip the hips for a moment.
+        if (grounded && airTime > 0.2f) fighter.Balance.Land();
+        airTime = grounded ? 0f : airTime + dt;
+
         if (grounded || hopCooldown < 0.35f) DriveLegs(dt, fatigue);
         else TuckLegs(); // just after take-off: knees up
+    }
+
+    /// <summary>A little steering in the air, a fraction of the ground push.</summary>
+    public void AirControl()
+    {
+        var body = fighter.Body;
+        float target = fighter.CurrentInput.move * fighter.Definition.walkSpeed;
+        float accel = (target - body.Torso.linearVelocity.x) * walkAcceleration * airControl;
+        if (Mathf.Abs(fighter.CurrentInput.move) < 0.1f) return;
+        foreach (var b in body.Bodies) b.AddForce(new Vector2(accel * b.mass, 0f));
     }
 
     /// <summary>Discrete steps: start one when asked (or when the body leans past the feet), brake in between.</summary>

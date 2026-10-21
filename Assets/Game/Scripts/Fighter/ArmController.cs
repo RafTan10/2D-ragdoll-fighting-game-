@@ -7,10 +7,9 @@ using UnityEngine;
 public class ArmController : MonoBehaviour
 {
     [Header("Speed")]
-    [Tooltip("Degrees/second an unburdened arm can turn at strength 1.")]
-    [SerializeField] float armSpeed = 950f;
-    [Tooltip("Each kg of weapon divides arm speed by (1 + this).")]
-    [SerializeField] float weaponWeightSlowdown = 0.55f;
+    [Tooltip("Top speed an arm can turn at, deg/s. Weapon weight isn't faked here: the shoulder's torque cap " +
+             "(RagdollBody) has to accelerate the real weapon, so heavy weapons get up to speed more slowly.")]
+    [SerializeField] float armSpeed = 1300f;
     [Tooltip("How hard an aimed arm chases its target (motor speed per degree of error).")]
     [SerializeField] float aimGain = 14f;
     [Tooltip("How hard a relaxed arm returns to guard.")]
@@ -33,11 +32,11 @@ public class ArmController : MonoBehaviour
         Drive(fighter.OffHand, fatigue);
     }
 
-    void Drive(Fighter.Hand hand, float fatigue)
+    /// <param name="strength">Tiredness × muscle (stagger), 0..1: weaker arms are slower and easier to stop.</param>
+    void Drive(Fighter.Hand hand, float strength)
     {
-        // Heavier weapons make the arm slower: that lag is what makes a hammer feel heavy. Tired arms are slower too.
-        float weaponMass = hand.weapon != null ? hand.weapon.mass : 0f;
-        float speedLimit = armSpeed * fighter.Definition.strength * fatigue / (1f + weaponMass * weaponWeightSlowdown);
+        float speedLimit = armSpeed * fighter.Definition.strength * strength;
+        float shoulderTorque = hand.shoulder.maxTorque * strength, elbowTorque = hand.elbow.maxTorque * strength;
 
         float shoulder, elbow, gain, maxSpeed;
         if (hand.Active)
@@ -54,8 +53,8 @@ public class ArmController : MonoBehaviour
             gain = guardGain;
             maxSpeed = speedLimit * guardSpeedShare;
         }
-        hand.shoulder.To(shoulder, fighter.Facing, gain, maxSpeed);
-        hand.elbow.To(elbow, fighter.Facing, gain, maxSpeed);
+        hand.shoulder.To(shoulder, fighter.Facing, gain, maxSpeed, shoulderTorque);
+        hand.elbow.To(elbow, fighter.Facing, gain, maxSpeed, elbowTorque);
     }
 
     /// <summary>

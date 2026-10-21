@@ -14,6 +14,8 @@ public class AIProfile : ScriptableObject
     [Range(0f, 1f)] public float aggression = 0.6f;
     [Range(0f, 1f)] public float blockChance = 0.4f;
     [Range(0f, 1f)] public float hopChance = 0.1f;
+    [Tooltip("How far off its aimed attacks are, world units (random each attempt).")]
+    public float aimError = 0.15f;
     [Tooltip("Multiplier on damage this fighter deals.")]
     public float damageMultiplier = 1f;
 }

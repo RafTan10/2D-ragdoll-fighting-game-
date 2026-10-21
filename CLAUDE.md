@@ -24,7 +24,10 @@ only — never copy Bloody Bastards' assets.
 - Simulated mouse/keyboard (`runtime simulate_pointer`) does NOT reach gameplay while the Editor is unfocused
   (Input System background behaviour) — test brains directly (`new PlayerBrain().Think(p, e)`) instead.
 - `Time.timeScale = 0.25f; Time.fixedDeltaTime = 0.005f` + repeated `capture game_view` gives slow-motion frame sequences.
-- Not a git repo yet.
+- Git: `main` = baseline before the realism upgrade; work happens on branches (e.g. `realism-upgrade`). Commit
+  before each risky step. `Library/` is ignored; if Unity reports "Database corruption detected", close Unity,
+  rename `Library` (e.g. to `Library_corrupt`, ignored) and reopen — `--args -rebuildLibrary` via the CLI did not work.
+- The Editor sometimes reopens `GetStarted_Scene`; open `Assets/Game/Scenes/Arena.unity` before testing.
 
 ## Roadmap (update the checkboxes as work lands)
 
@@ -87,6 +90,32 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
 - [ ] Next: the user plays it; tune from their notes. Not verified with real mouse/keyboard/touch (Editor was
       unfocused) — buttons were driven through `OnScreenControls.Force` instead.
 
+### Phase 1c — Realism upgrade (doc "Ragdoll Duel Realism Upgrade Prompts", branch `realism-upgrade`)
+- [x] P1 audit → `Assets/Game/AUDIT.md`. P2 split `Fighter.cs` into `RagdollBody`, `BalanceController`,
+      `LocomotionController`, `ArmController`, `StaminaController`, `KnockdownController` (+ `MotorDrive`, `PixelBounds`);
+      `Fighter` runs them in a fixed order in FixedUpdate. Tuning = `[SerializeField]` fields with tooltips.
+- [x] P3 physics: legs heavier than arms (1.8/1.2 vs arms 1.6/1.2 — arms stay heavy vs the weapon or joints jitter),
+      angular damping 0.6, forearms + weapons Continuous, physics materials (feet 1.0, body 0.4, weapon 0.2, no bounce),
+      start-pose-inside-limits warning, **fixed step 0.01** (`GameFeel.BaseFixedDelta`). Gravity left at 1 (fighters ≈1.8 u tall).
+- [x] P4 balance: hip-height support force (legs push torso to 90% of spawn height, feet down by the same), `Muscle`
+      0..1 that drops on hits (stagger) and recovers in 0.6 s; arms/legs/balance all × Fatigue × Muscle.
+- [x] P5 movement: landing squash, 15% air control (steps / jump / lunge kept — user asked for them earlier).
+- [x] P6 arms: no faked speed-by-mass; shoulder/elbow **torque** (70/45) has to accelerate the real weapon. Masses:
+      dagger 0.45, sword 1, axe 1.6, mace 2, hammer 2.4, shield 1.5. Measured: sword peaks 0.63 s into the strike,
+      hammer 0.87 s.
+- [x] P7 hits: damage from collision **impulse** (`Weapon.ReferenceImpact` 5 N·s = listed damage, min 1.2), per-body-part
+      cooldown 0.2 s, Light/Medium/Heavy buckets, knockback, stagger; `HitEvents` (Hit / Blocked) → `HitFeedback`
+      (blood/dust/sparks, sound, hit-stop, camera trauma); bruises darken struck parts; F3 logs every hit.
+- [x] P8 best of 3 (`MatchManager.roundsToWin`), match-over screen (Enter rematch). P9 trauma/Perlin shake as an offset,
+      KO slow-mo zooms toward the final blow, blood Off/Low/Normal (B, default Low), stains fade after 10 s,
+      whoosh when a blade passes 8 m/s, body-fall thud. P10 camera SmoothDamp on torsos.
+- [x] P11 AI reacts to a delayed view of the opponent (`reactionTime × 0.6`: 0.36 / 0.21 / 0.11 s) and has aim error
+      (`AIProfile.aimError` 0.3 / 0.15 / 0.07).
+- Not done on purpose: hiding Ronin / extra weapons from the menu and disabling on-screen buttons on PC (the doc's
+  scope suggestions conflict with earlier requests); per-fighter physics layers (IgnoreCollision already does this);
+  a white hit flash (the unlit sprite material can't brighten, so the flash stays red).
+- Measured after (Hard vs Hard, Knight vs Barbarian): ~36 s rounds, standing ~100% of the time, 36 hits avg 5.7 dmg.
+
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
 - [ ] Two-handed weapons (big swords can't use a shield), weapon weight affects swing speed
@@ -112,9 +141,12 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
 ```
 Assets/Game/
   Scripts/Data/      FighterDefinition, WeaponDefinition, ArenaDefinition, AIProfile, GameDatabase
-  Scripts/Fighter/   Fighter (ragdoll, arm IK, stamina, footwork, down/faint/get-up, PixelBounds), BodyPart, Weapon,
-                     HandMoves (SwingMove: chop/slash/thrust/spin, BlockAim), FighterInput, PlayerBrain, AIBrain, ScriptBrain (tests)
-  Scripts/Match/     MatchManager (rounds + IMGUI HUD/select screen), OnScreenControls, GameFeel (hit-stop, slow-mo, sounds),
+  Scripts/Fighter/   Fighter (coordinator: health, input, events), RagdollBody (build, mirror, ground), BalanceController,
+                     LocomotionController, ArmController (IK), StaminaController, KnockdownController, MotorDrive, PixelBounds,
+                     BodyPart, Weapon (hit detection + damage), HandMoves (SwingMove, BlockAim), FighterInput,
+                     PlayerBrain, AIBrain, ScriptBrain (tests)
+  Scripts/Combat/    HitEvents (Hit / Blocked events), HitFeedback (effects, sound, hit-stop, camera trauma)
+  Scripts/Match/     MatchManager (best-of-3 rounds + IMGUI HUD/select screen), OnScreenControls, GameFeel (time scale, sounds),
                      ArenaView, CameraRig, BloodFX (blood/sparks/dust), RainFX, HitboxOverlay
   Editor/            PixelArtImporter, ContentTools (add fighter/weapon/arena), PlaceholderArt, GameSceneBuilder
   Art/Fighters/<Name>/   head.png torso.png upper_arm.png lower_arm.png upper_leg.png lower_leg.png [cape.png]
@@ -165,6 +197,8 @@ Assets/Stickman/     earlier 3D stickman experiment — not part of the game
   schemes (touch, gamepad, network) = new brain, no fighter changes.
 - A fighter's own colliders ignore each other (`Physics2D.IgnoreCollision`), so no layer setup is needed.
 - Joints are driven by HingeJoint2D **motors** (stable); avoid raw high-gain torques on light parts.
+- Never set positions/rotations of a live ragdoll part, except spawning and `RagdollBody.Mirror` (turning round).
+- Combat code raises `HitEvents`; effects/sound/camera only listen (`HitFeedback`). Don't play effects from `Weapon`.
 
 ## Controls (PC / touch)
 
@@ -177,6 +211,8 @@ Assets/Stickman/     earlier 3D stickman experiment — not part of the game
 | Lunge | — | `Shift` | B / east |
 | Free aim (advanced) | — | hold left / right mouse: that hand reaches for the cursor | right / left stick |
 | Hitboxes on/off | — | `H` | — |
+| Blood Off / Low / Normal | — | `B` | — |
+| Log every hit to the Console | — | `F3` | — |
 | Restart / menu | — | `R` / `Esc` | — |
 
 Swings alternate an overhead chop and a side slash. On a touchscreen, holding/dragging anywhere that isn't a
@@ -193,6 +229,7 @@ weapon fixed joints are rebuilt) so both face each other again. Jumps tuck the l
 still collides, so clearing the opponent depends on distance and their guard.
 
 Damage only comes from a weapon's **striking part** (blade / head / fist) moving fast at the contact point
-(≥ `minImpactSpeed`, default 2.5 m/s): damage × (speed / 5 m/s, clamped 0.4–1.6) × body part (head 1.5) × armour.
+(≥ `minImpactSpeed`, default 2.5 m/s, and impulse ≥ 1.2 N·s): damage × (impulse / 5 N·s, clamped 0.3–1.8)
+× body part (head 1.5) × armour. Heavier weapons hit harder at the same speed.
 Weapon on weapon or shield = block (sparks, clank, blocker loses stamina). A helpless (down / fainted) fighter's
 flailing never deals damage.
