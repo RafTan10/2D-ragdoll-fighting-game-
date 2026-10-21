@@ -34,6 +34,8 @@ public class Weapon : MonoBehaviour
     public static float MediumAt = 0.8f, HeavyAt = 1.4f;
     /// <summary>Muscle strength left after a medium / heavy hit (recovers over ~0.6 s).</summary>
     public static float MediumStagger = 0.55f, HeavyStagger = 0.3f;
+    /// <summary>A shield must move at least this fast (m/s) into the opponent to bash.</summary>
+    public static float BashMinSpeed = 2.2f;
 
     /// <summary>Running totals for tuning: how many strike contacts were too soft, blocked, or landed.</summary>
     public static int StatContacts, StatTooSlow, StatBlocked, StatHits;
@@ -46,6 +48,10 @@ public class Weapon : MonoBehaviour
 
     /// <summary>Tip speed (m/s) at which a swing whooshes.</summary>
     public static float WhooshSpeed = 8f;
+    /// <summary>Tip speed (m/s) above which the blade leaves a motion trail.</summary>
+    public static float TrailSpeed = 6f;
+    /// <summary>Motion trail at the blade tip (set up by RagdollBody); null for fists and shields.</summary>
+    public TrailRenderer trail;
     Rigidbody2D body;
     bool whooshing;
 
@@ -54,6 +60,8 @@ public class Weapon : MonoBehaviour
         // Whoosh when the striking part rushes through the air (each time it crosses the speed).
         if (strikeCollider == null || owner == null || owner.IsHelpless) return;
         if (body == null) body = GetComponent<Rigidbody2D>();
+        if (trail != null) trail.emitting = !IsShield && body.GetPointVelocity(strikeCollider.bounds.center).magnitude > TrailSpeed;
+        if (IsShield) return;
         float speed = body.GetPointVelocity(strikeCollider.bounds.center).magnitude;
         if (!whooshing && speed > WhooshSpeed) { whooshing = true; GameFeel.Play(GameFeel.Sound.Whoosh, Mathf.Clamp01(speed / 20f) * 0.5f); }
         else if (whooshing && speed < WhooshSpeed * 0.6f) whooshing = false;
@@ -81,6 +89,21 @@ public class Weapon : MonoBehaviour
         float impact = impulse > 0.01f ? impulse : speed * mass;
         if (float.IsNaN(impact) || float.IsInfinity(impact)) return;
         impact = Mathf.Min(impact, MaxImpact);
+
+        // Shield bash: a shield driven into the opponent's body shoves them back and rocks them, no damage.
+        if (IsShield)
+        {
+            var bashed = collision.collider.GetComponent<BodyPart>();
+            if (bashed == null || bashed.fighter == owner || bashed.fighter.IsHelpless) return;
+            if (speed < BashMinSpeed || hand == null || !hand.Active) return;
+            lastHitOn[collision.collider] = Time.time;
+            Vector2 push = new Vector2(Mathf.Sign(bashed.fighter.Torso.position.x - owner.Torso.position.x), 0f);
+            float bashImpact = Mathf.Max(impact, speed * mass);
+            bashed.fighter.Balance.Bashed(push, bashImpact);
+            bashed.fighter.SpendStamina(bashImpact * 0.8f);
+            HitEvents.RaiseBashed(new BashInfo { attacker = owner, victim = bashed.fighter, point = point, impact = bashImpact });
+            return;
+        }
 
         float minSpeed = definition != null ? definition.minImpactSpeed : FistMinSpeed;
         StatContacts++;
@@ -126,6 +149,7 @@ public class Weapon : MonoBehaviour
         if (rb != null) rb.AddForce(dir * Mathf.Min(impact * KnockbackScale, MaxKnockback), ForceMode2D.Impulse);
         if (strength == HitStrength.Heavy) part.fighter.Balance.Stagger(HeavyStagger);
         else if (strength == HitStrength.Medium) part.fighter.Balance.Stagger(MediumStagger);
+        part.fighter.Balance.Flinch(dir, impact, part.kind == PartKind.Head);
 
         HitEvents.RaiseHit(new HitInfo
         {

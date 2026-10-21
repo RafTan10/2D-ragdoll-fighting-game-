@@ -9,6 +9,8 @@ public struct FighterInput
     public bool hop;
     /// <summary>One-shot: jump up (and along with <see cref="move"/>). High enough to leap over the opponent.</summary>
     public bool jump;
+    /// <summary>A swing is in its striking phase: the body leans in and lunges with it.</summary>
+    public bool attacking;
 
     /// <summary>The main hand (weapon) is being controlled this frame; otherwise it relaxes into guard.</summary>
     public bool mainActive;

@@ -21,17 +21,33 @@ public class HitFeedback : MonoBehaviour
     {
         HitEvents.Hit += OnHit;
         HitEvents.Blocked += OnBlocked;
+        HitEvents.Bashed += OnBashed;
     }
 
     void OnDisable()
     {
         HitEvents.Hit -= OnHit;
         HitEvents.Blocked -= OnBlocked;
+        HitEvents.Bashed -= OnBashed;
+    }
+
+    void OnBashed(BashInfo bash)
+    {
+        ImpactFX.Bash(bash.point, 0.8f + Mathf.Clamp01(bash.impact / 8f));
+        BloodFX.Dust(bash.point, Vector2.up, 10);
+        GameFeel.Play(GameFeel.Sound.Wood, Mathf.Clamp01(0.45f + bash.impact * 0.05f));
+        GameFeel.Play(GameFeel.Sound.Thud, 0.5f);
+        GameFeel.HitStop(mediumHitStop);
+        if (CameraRig.Current != null) CameraRig.Current.AddTrauma(mediumTrauma);
     }
 
     void OnHit(HitInfo hit)
     {
         float scale = hit.strength == HitStrength.Heavy ? 1f : hit.strength == HitStrength.Medium ? 0.6f : 0.3f;
+
+        // The flash where it landed: warm white on armour, red-white on flesh; bigger for harder hits.
+        var flash = hit.armoured ? new Color(1f, 0.95f, 0.75f, 0.95f) : new Color(1f, 0.55f, 0.5f, 0.95f);
+        ImpactFX.Hit(hit.point, hit.direction, 0.55f + 0.75f * scale, flash);
 
         if (hit.armoured)
         {
@@ -59,6 +75,7 @@ public class HitFeedback : MonoBehaviour
     void OnBlocked(BlockInfo block)
     {
         BloodFX.Sparks(block.point, 10);
+        ImpactFX.Hit(block.point, Vector2.up, 0.6f, new Color(1f, 0.92f, 0.6f, 0.9f));
         GameFeel.Play(block.shield ? GameFeel.Sound.Wood : GameFeel.Sound.Metal, Mathf.Clamp01(0.3f + block.impact * 0.05f));
         if (CameraRig.Current != null) CameraRig.Current.AddTrauma(blockTrauma);
     }

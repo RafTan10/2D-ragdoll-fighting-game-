@@ -115,6 +115,13 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
   scope suggestions conflict with earlier requests); per-fighter physics layers (IgnoreCollision already does this);
   a white hit flash (the unlit sprite material can't brighten, so the flash stays red).
 - Measured after (Hard vs Hard, Knight vs Barbarian): ~36 s rounds, standing ~100% of the time, 36 hits avg 5.7 dmg.
+- [x] Attack feel: chop/slash arcs are centred on the opponent's head/chest (`SwingMove.TargetAngle`), the body leans
+      13° into a strike (`FighterInput.attacking` → `BalanceController.attackLean`) and takes a committed step in
+      (`LocomotionController.commitStep*`) with a lunge (front leg reaches, back leg pushes). Blade hits make the
+      victim flinch (`Balance.Flinch`: torso jerk + head snap); shield **bash** (press L/K near the opponent, AI does it
+      when crowded) shoves the whole body (`Balance.Bashed`) without damage → `HitEvents.Bashed`. Visuals: impact star
+      + streak (`ImpactFX`), bash ring, blade motion trails (TrailRenderer on the tip, on above 6 m/s). Stance widened,
+      higher foot lift. Measured: ~40 s rounds, 16 bashes per round, fighters stayed standing.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites

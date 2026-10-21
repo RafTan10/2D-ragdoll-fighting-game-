@@ -22,6 +22,7 @@ public class PlayerBrain : IFighterBrain
     readonly Vector2[] touchStart = new Vector2[10];
     readonly SwingMove mainSwing = new SwingMove(), offSwing = new SwingMove();
     int mainSwingCount, offSwingCount;
+    bool mainWasPressed, offWasPressed;
 
     public FighterInput Think(Fighter self, Fighter opponent)
     {
@@ -100,20 +101,29 @@ public class PlayerBrain : IFighterBrain
         }
 
         // Hand actions win over free aim for that hand.
-        HandAction(self, opponent, self.MainHand, mainSwing, ref mainSwingCount, mainAction, ref input.mainActive, ref input.mainAim);
-        HandAction(self, opponent, self.OffHand, offSwing, ref offSwingCount, offAction, ref input.offActive, ref input.offAim);
+        HandAction(self, opponent, self.MainHand, mainSwing, ref mainSwingCount, mainAction, ref mainWasPressed, ref input.mainActive, ref input.mainAim);
+        HandAction(self, opponent, self.OffHand, offSwing, ref offSwingCount, offAction, ref offWasPressed, ref input.offActive, ref input.offAim);
 
+        input.attacking = mainSwing.InStrike || offSwing.InStrike;
         input.move = Mathf.Clamp(input.move, -1f, 1f);
         return input;
     }
 
-    /// <summary>Shield: block while held. Weapon or fist: start a swing on press, keep swinging while held.</summary>
+    /// <summary>
+    /// Shield: pressing it punches the shield into a nearby opponent (a bash that shoves them), then it blocks while
+    /// held. Weapon or fist: start a swing on press, keep swinging while held.
+    /// </summary>
     static void HandAction(Fighter self, Fighter opponent, Fighter.Hand hand, SwingMove swing, ref int count,
-                           bool pressed, ref bool active, ref Vector2 aim)
+                           bool pressed, ref bool wasPressed, ref bool active, ref Vector2 aim)
     {
+        bool justPressed = pressed && !wasPressed;
+        wasPressed = pressed;
         if (hand.IsShield)
         {
-            if (pressed) Set(ref active, ref aim, SwingMove.BlockAim(self, hand, opponent));
+            bool close = opponent != null && Mathf.Abs(opponent.Torso.position.x - self.Torso.position.x) < self.Reach * 1.1f;
+            if (justPressed && close) swing.Start(SwingMove.Kind.Bash, 0.1f);
+            if (swing.Running && swing.Aim(self, hand, opponent, out var bashAim)) Set(ref active, ref aim, bashAim);
+            else if (pressed) Set(ref active, ref aim, SwingMove.BlockAim(self, hand, opponent));
             return;
         }
         if (pressed && !swing.Running)

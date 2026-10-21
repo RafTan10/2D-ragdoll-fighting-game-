@@ -29,6 +29,14 @@ public struct BlockInfo
     public bool shield;
 }
 
+/// <summary>A shield was driven into the opponent's body: a shove, no damage.</summary>
+public struct BashInfo
+{
+    public Fighter attacker, victim;
+    public Vector2 point;
+    public float impact;
+}
+
 /// <summary>
 /// The combat event hub. Weapons raise hits and blocks here; effects, sound, camera shake and UI listen, so
 /// detection never plays effects itself and everything reacts to the same hit strength.
@@ -37,6 +45,13 @@ public static class HitEvents
 {
     public static event Action<HitInfo> Hit;
     public static event Action<BlockInfo> Blocked;
+    public static event Action<BashInfo> Bashed;
+
+    public static void RaiseBashed(BashInfo bash)
+    {
+        if (LogHits) Debug.Log($"[Bash] {bash.attacker.Definition.displayName} shield-bashed {bash.victim.Definition.displayName} impact={bash.impact:F1}");
+        Bashed?.Invoke(bash);
+    }
 
     /// <summary>Log every hit (impact, damage, part) to the Console for tuning. Toggle with F3 in a match.</summary>
     public static bool LogHits;

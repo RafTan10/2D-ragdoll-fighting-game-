@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class SwingMove
 {
-    public enum Kind { Chop, Slash, Thrust, Spin }
+    public enum Kind { Chop, Slash, Thrust, Spin, Bash }
 
     public bool Running { get; private set; }
     public Kind Current { get; private set; }
@@ -32,6 +32,24 @@ public class SwingMove
 
     public void Cancel() => Running = false;
 
+    /// <summary>Past the wind-up and driving at the target: the body should commit (lean and step in).</summary>
+    public bool InStrike => Running && (Current == Kind.Spin || Time.time - startTime >= windUp);
+
+    /// <summary>
+    /// Angle (0° = straight down, 90° = level forward, facing-right frame) from the shoulder to the opponent's
+    /// head (<paramref name="head"/>) or chest, so swings arc through where they really are.
+    /// </summary>
+    float TargetAngle(Fighter self, Fighter.Hand hand, Fighter opponent, bool head)
+    {
+        if (opponent == null) return head ? 105f : 90f;
+        Vector2 target = (head ? opponent.Head.position : opponent.Torso.position + Vector2.up * 0.12f) + AimOffset;
+        Vector2 d = target - hand.ShoulderPosition;
+        float angle = Mathf.Atan2(d.x * self.Facing, -d.y) * Mathf.Rad2Deg;
+        return Mathf.Clamp(angle, 40f, 150f); // behind us or straight up/down: fall back to a sensible arc
+    }
+
+    static float EaseIn(float x) => x * x * (2f - x) * 0.5f + x * 0.5f; // accelerates into the target
+
     /// <summary>Aim point (offset from the shoulder) for this frame; false once the swing has finished.</summary>
     public bool Aim(Fighter self, Fighter.Hand hand, Fighter opponent, out Vector2 aim)
     {
@@ -44,22 +62,27 @@ public class SwingMove
         {
             case Kind.Chop:
             {
-                // Lift the hand up and back over the shoulder, then bring it over the top and down in front.
-                const float swing = 0.3f;
+                // Lift the hand up and back over the shoulder, then bring it over the top and down *through the
+                // opponent's head*: the arc is centred on where they actually are, so the blade connects.
+                const float swing = 0.28f;
+                float target = TargetAngle(self, hand, opponent, true);
+                float top = Mathf.Min(target + 115f, 225f), bottom = target - 95f;
                 float angle;
-                if (t < windUp) angle = Mathf.Lerp(40f, 205f, Smooth(t / windUp));
-                else if (t < windUp + swing) angle = Mathf.Lerp(205f, -15f, (t - windUp) / swing);
+                if (t < windUp) angle = Mathf.Lerp(40f, top, Smooth(t / windUp));
+                else if (t < windUp + swing) angle = Mathf.Lerp(top, bottom, EaseIn((t - windUp) / swing));
                 else { Running = false; return false; }
                 aim = Polar(self, angle, reach);
                 return true;
             }
             case Kind.Slash:
             {
-                // Draw the hand back at shoulder height, then sweep it forward and across, low.
-                const float swing = 0.26f;
+                // Draw the hand back, then whip it forward through the opponent's chest and on past.
+                const float swing = 0.24f;
+                float target = TargetAngle(self, hand, opponent, false);
+                float back = target + 70f, through = target - 80f;
                 float angle;
-                if (t < windUp) angle = Mathf.Lerp(60f, 150f, Smooth(t / windUp));
-                else if (t < windUp + swing) angle = Mathf.Lerp(150f, 20f, (t - windUp) / swing);
+                if (t < windUp) angle = Mathf.Lerp(60f, back, Smooth(t / windUp));
+                else if (t < windUp + swing) angle = Mathf.Lerp(back, through, EaseIn((t - windUp) / swing));
                 else { Running = false; return false; }
                 float radius = Mathf.Lerp(reach * 0.75f, reach, Mathf.Sin(Mathf.Clamp01(t / (windUp + swing)) * Mathf.PI));
                 aim = Polar(self, angle, radius) + (t >= windUp ? Vector2.zero : new Vector2(-self.Facing * 0.12f, 0f));
@@ -75,6 +98,16 @@ public class SwingMove
                     Vector2 target = opponent != null ? opponent.Head.position + AimOffset - hand.ShoulderPosition : Polar(self, 95f, reach);
                     aim = target.normalized * reach;
                 }
+                else { Running = false; return false; }
+                return true;
+            }
+            case Kind.Bash:
+            {
+                // Pull the shield in to the chest, then punch it straight out into the opponent.
+                const float punch = 0.18f;
+                Vector2 chest = opponent != null ? opponent.Torso.position + Vector2.up * 0.1f : hand.ShoulderPosition + Polar(self, 90f, reach);
+                if (t < windUp) aim = Polar(self, 70f, reach * 0.35f);
+                else if (t < windUp + punch) aim = Vector2.ClampMagnitude(chest - hand.ShoulderPosition, reach) * 1.3f; // aim past them
                 else { Running = false; return false; }
                 return true;
             }

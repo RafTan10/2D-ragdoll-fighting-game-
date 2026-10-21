@@ -208,7 +208,7 @@ public class RagdollBody : MonoBehaviour
         {
             var whole = go.AddComponent<BoxCollider2D>();
             FitBox(whole, def.sprite, 0f, 1f);
-            weapon.strikeCollider = def.IsShield ? null : whole;
+            weapon.strikeCollider = whole; // a shield's whole face can bash
         }
         else
         {
@@ -220,6 +220,7 @@ public class RagdollBody : MonoBehaviour
         }
 
         foreach (var col in go.GetComponents<Collider2D>()) col.sharedMaterial = weaponMaterial;
+        if (!def.IsShield) weapon.trail = MakeTrail(go.transform, def.sprite, order - 1, material);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.mass = def.mass;
@@ -234,6 +235,34 @@ public class RagdollBody : MonoBehaviour
         fixedJoint.connectedBody = hand;
         fixedJoint.frequency = 0f;
         return weapon;
+    }
+
+    [Header("Weapon trails")]
+    [Tooltip("Seconds a motion trail lingers behind a fast blade.")]
+    [SerializeField] float trailTime = 0.09f;
+    [SerializeField] float trailWidth = 0.07f;
+    [SerializeField] Color trailColor = new Color(1f, 0.97f, 0.9f, 0.55f);
+
+    /// <summary>A short motion streak at the weapon's tip; the Weapon switches it on while the blade is fast.</summary>
+    TrailRenderer MakeTrail(Transform weapon, Sprite sprite, int order, Material material)
+    {
+        var go = new GameObject("Trail");
+        go.transform.SetParent(weapon, false);
+        go.transform.localPosition = new Vector3(0f, sprite.bounds.max.y * 0.92f, 0f);
+        var trail = go.AddComponent<TrailRenderer>();
+        trail.time = trailTime;
+        trail.minVertexDistance = 0.02f;
+        trail.widthCurve = new AnimationCurve(new Keyframe(0f, trailWidth), new Keyframe(1f, 0f));
+        trail.colorGradient = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(trailColor, 0f), new GradientColorKey(trailColor, 1f) },
+            alphaKeys = new[] { new GradientAlphaKey(trailColor.a, 0f), new GradientAlphaKey(0f, 1f) }
+        };
+        trail.emitting = false;
+        trail.sortingOrder = order;
+        trail.numCapVertices = 2;
+        if (material != null) trail.sharedMaterial = material;
+        return trail;
     }
 
     void MakeCape(Vector2 anchor, int order, Material material)

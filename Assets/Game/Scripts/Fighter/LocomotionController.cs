@@ -20,12 +20,28 @@ public class LocomotionController : MonoBehaviour
     [SerializeField] float stepStaminaCost = 0.4f;
 
     [Header("Stance (degrees; + = forward)")]
-    [SerializeField] float frontHip = 26f;
-    [SerializeField] float backHip = -16f;
-    [SerializeField] float frontKnee = -32f;
-    [SerializeField] float backKnee = -24f;
+    [Tooltip("A wide fighting stance: front leg forward and bent, back leg behind and straighter to push from.")]
+    [SerializeField] float frontHip = 30f;
+    [SerializeField] float backHip = -22f;
+    [SerializeField] float frontKnee = -36f;
+    [SerializeField] float backKnee = -18f;
     [Tooltip("Extra knee bend when exhausted.")]
     [SerializeField] float tiredKneeSag = 50f;
+    [Tooltip("How high the swinging foot lifts (knee bend at mid-step).")]
+    [SerializeField] float stepLift = 52f;
+    [Tooltip("How far the swinging leg travels from behind to in front, degrees.")]
+    [SerializeField] float stepSweep = 40f;
+
+    [Header("Attack lunge")]
+    [Tooltip("While a strike drives in: front leg reaches forward, back leg straightens to push.")]
+    [SerializeField] float lungeFrontHip = 14f;
+    [SerializeField] float lungeFrontKnee = -12f;
+    [SerializeField] float lungeBackHip = -10f;
+    [SerializeField] float lungeBackKnee = 14f;
+    [Tooltip("Attacking within this many reaches of the opponent takes a step in with the blow.")]
+    [SerializeField] float commitStepRange = 1.35f;
+    [Tooltip("Speed of that committed step, as a multiple of a normal step.")]
+    [SerializeField] float commitStepBoost = 1.3f;
 
     [Header("Jump / lunge")]
     [SerializeField] float jumpUp = 4.6f;
@@ -45,7 +61,8 @@ public class LocomotionController : MonoBehaviour
     public float SteppingDir => stepTimer > 0f ? stepDir : 0f;
 
     Fighter fighter;
-    float stepTimer, stepDir;
+    float stepTimer, stepDir, stepBoost = 1f;
+    bool wasAttacking;
     int stepCount;
     float hopCooldown, crossedTime, airTime;
     bool hopQueued, jumpQueued;
@@ -92,19 +109,25 @@ public class LocomotionController : MonoBehaviour
     {
         var body = fighter.Body;
         float vx = body.Torso.linearVelocity.x;
+        // A strike starting near the opponent takes a step in with it, so the body follows the blow.
+        bool attacking = fighter.CurrentInput.attacking;
+        bool attackStarted = attacking && !wasAttacking;
+        wasAttacking = attacking;
+        var opponent = fighter.Opponent;
+        if (attackStarted && opponent != null && stepTimer <= 0f)
+        {
+            float dist = Mathf.Abs(opponent.Torso.position.x - body.Torso.position.x);
+            if (dist < fighter.Reach * commitStepRange && dist > fighter.Reach * 0.45f)
+                StartStep(Mathf.Sign(opponent.Torso.position.x - body.Torso.position.x), commitStepBoost);
+        }
+
         if (stepTimer <= 0f)
         {
             float want = fighter.CurrentInput.move;
             float support = (body.FrontLeg.foot.position.x + body.BackLeg.foot.position.x) * 0.5f;
             float lead = body.Torso.position.x - support;
             if (Mathf.Abs(want) < 0.1f && Mathf.Abs(lead) > recoveryLean) want = Mathf.Sign(lead); // recovery step
-            if (Mathf.Abs(want) > 0.1f)
-            {
-                stepDir = Mathf.Sign(want);
-                stepTimer = stepDuration;
-                stepCount++;
-                fighter.SpendStamina(stepStaminaCost);
-            }
+            if (Mathf.Abs(want) > 0.1f) StartStep(Mathf.Sign(want), 1f);
         }
 
         float targetVx = 0f;
@@ -112,30 +135,47 @@ public class LocomotionController : MonoBehaviour
         {
             stepTimer -= dt;
             float progress = 1f - Mathf.Clamp01(stepTimer / stepDuration);
-            targetVx = stepDir * fighter.Definition.walkSpeed * stepSpeed * Mathf.Sin(progress * Mathf.PI);
+            targetVx = stepDir * fighter.Definition.walkSpeed * stepSpeed * stepBoost * Mathf.Sin(progress * Mathf.PI);
         }
         // Planted between steps: brake hard.
         float accel = (targetVx - vx) * walkAcceleration * (stepTimer > 0f ? 1f : plantedBrake);
         foreach (var b in body.Bodies) b.AddForce(new Vector2(accel * b.mass, 0f));
     }
 
+    void StartStep(float dir, float boost)
+    {
+        stepDir = dir;
+        stepBoost = boost;
+        stepTimer = stepDuration;
+        stepCount++;
+        fighter.SpendStamina(stepStaminaCost);
+    }
+
     public void DriveLegs(float dt, float fatigue)
     {
         var body = fighter.Body;
         float facing = fighter.Facing;
-        // Crouched guard: front leg forward, back leg behind, knees bent (more when tired).
+        // Fighting stance: front leg forward, back leg behind, knees bent (more when tired).
         float sag = (1f - fatigue) * tiredKneeSag;
         float fHip = frontHip, bHip = backHip, fKnee = frontKnee - sag, bKnee = backKnee - sag;
 
+        // Lunge into a strike: front leg reaches, back leg straightens and pushes.
+        float lunge = fighter.Balance.AttackBlend;
+        fHip += lungeFrontHip * lunge; fKnee += lungeFrontKnee * lunge;
+        bHip += lungeBackHip * lunge; bKnee += lungeBackKnee * lunge;
+
         if (stepTimer > 0f)
         {
-            // One leg swings (lifted, from behind to in front of the other), the other pushes; legs alternate.
+            // One leg swings (lifted high, from behind to in front of the other), the other pushes; legs alternate.
+            // A step towards the opponent swings the leg forward; a step back swings it backwards.
             float progress = 1f - Mathf.Clamp01(stepTimer / stepDuration);
             float lift = Mathf.Sin(progress * Mathf.PI);
-            float sweep = stepDir * facing * (progress - 0.5f) * 34f;
-            if (stepCount % 2 == 0) { fHip += sweep; fKnee -= 40f * lift; bHip -= sweep * 0.5f; }
-            else { bHip += sweep; bKnee -= 40f * lift; fHip -= sweep * 0.5f; }
+            float sweep = stepDir * facing * (progress - 0.5f) * stepSweep;
+            if (stepCount % 2 == 0) { fHip += sweep; fKnee -= stepLift * lift; bHip -= sweep * 0.5f; bKnee += 8f * lift; }
+            else { bHip += sweep; bKnee -= stepLift * lift; fHip -= sweep * 0.5f; fKnee += 8f * lift; }
         }
+        bKnee = Mathf.Min(bKnee, -2f); // knees only bend one way
+        fKnee = Mathf.Min(fKnee, -2f);
 
         float torque = body.LegTorque * fatigue;
         body.FrontLeg.hip.To(fHip, facing, 8f, 420f, torque);

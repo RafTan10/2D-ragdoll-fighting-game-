@@ -42,6 +42,7 @@ public class MatchManager : MonoBehaviour
     {
         if (database == null) { Debug.LogError("MatchManager needs a GameDatabase."); enabled = false; return; }
         BloodFX.Material = database.spriteMaterial;
+        ImpactFX.Material = database.spriteMaterial;
         // Ragdoll chains (torso > arm > forearm > weapon) jitter badly with the default 8/3 solver iterations.
         Physics2D.velocityIterations = 20;
         Physics2D.positionIterations = 8;

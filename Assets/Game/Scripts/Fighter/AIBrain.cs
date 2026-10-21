@@ -88,7 +88,8 @@ public class AIBrain : IFighterBrain
             float chance = profile.blockChance * (plan == Plan.Recover ? 2f : 1f) * 6f * Time.deltaTime;
             if (!threatened) blocking = false;
             else if (!blocking && Random.value < chance) blocking = true;
-            if (blocking) { input.offActive = true; input.offAim = SwingMove.BlockAim(self, self.OffHand, opponent); }
+            if (offSwing.Running && offSwing.Aim(self, self.OffHand, opponent, out var bashAim)) { input.offActive = true; input.offAim = bashAim; }
+            else if (blocking) { input.offActive = true; input.offAim = SwingMove.BlockAim(self, self.OffHand, opponent); }
         }
         else if (offSwing.Running && offSwing.Aim(self, self.OffHand, opponent, out var offAim))
         {
@@ -96,6 +97,7 @@ public class AIBrain : IFighterBrain
             input.offAim = offAim;
         }
 
+        input.attacking = mainSwing.InStrike || offSwing.InStrike;
         input.move = move;
         input.hop = hop;
         input.jump = jump;
@@ -158,6 +160,11 @@ public class AIBrain : IFighterBrain
         if (!self.HasShield && seen.swinging && !mainSwing.Running && dist < opponent.Reach * 1.3f
             && Random.value < profile.blockChance * 0.6f)
             parryUntil = now + 0.35f;
+
+        // Shield: shove a crowding opponent away with a bash.
+        if (self.HasShield && !offSwing.Running && plan != Plan.Recover && dist < reach * 0.75f
+            && Random.value < 0.15f + aggression * 0.25f)
+            offSwing.Start(SwingMove.Kind.Bash, 0.1f);
 
         // Second weapon: a quick thrust now and then.
         if (!self.HasShield && self.OffHand.weapon != null && !offSwing.Running && plan != Plan.Recover
