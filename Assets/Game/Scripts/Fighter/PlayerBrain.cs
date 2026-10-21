@@ -100,9 +100,13 @@ public class PlayerBrain : IFighterBrain
             offAction |= buttons.OffHeld;
         }
 
+        // A freely aimed weapon hand is attacking (its speed decides whether a contact hurts); a shield never is.
+        input.mainStriking = input.mainActive && !self.MainHand.IsShield;
+        input.offStriking = input.offActive && !self.OffHand.IsShield;
+
         // Hand actions win over free aim for that hand.
-        HandAction(self, opponent, self.MainHand, mainSwing, ref mainSwingCount, mainAction, ref mainWasPressed, ref input.mainActive, ref input.mainAim);
-        HandAction(self, opponent, self.OffHand, offSwing, ref offSwingCount, offAction, ref offWasPressed, ref input.offActive, ref input.offAim);
+        HandAction(self, opponent, self.MainHand, mainSwing, ref mainSwingCount, mainAction, ref mainWasPressed, ref input.mainActive, ref input.mainAim, ref input.mainStriking);
+        HandAction(self, opponent, self.OffHand, offSwing, ref offSwingCount, offAction, ref offWasPressed, ref input.offActive, ref input.offAim, ref input.offStriking);
 
         input.attacking = mainSwing.InStrike || offSwing.InStrike;
         input.move = Mathf.Clamp(input.move, -1f, 1f);
@@ -114,7 +118,7 @@ public class PlayerBrain : IFighterBrain
     /// held. Weapon or fist: start a swing on press, keep swinging while held.
     /// </summary>
     static void HandAction(Fighter self, Fighter opponent, Fighter.Hand hand, SwingMove swing, ref int count,
-                           bool pressed, ref bool wasPressed, ref bool active, ref Vector2 aim)
+                           bool pressed, ref bool wasPressed, ref bool active, ref Vector2 aim, ref bool striking)
     {
         bool justPressed = pressed && !wasPressed;
         wasPressed = pressed;
@@ -122,8 +126,8 @@ public class PlayerBrain : IFighterBrain
         {
             bool close = opponent != null && Mathf.Abs(opponent.Torso.position.x - self.Torso.position.x) < self.Reach * 1.1f;
             if (justPressed && close) swing.Start(SwingMove.Kind.Bash, 0.1f);
-            if (swing.Running && swing.Aim(self, hand, opponent, out var bashAim)) Set(ref active, ref aim, bashAim);
-            else if (pressed) Set(ref active, ref aim, SwingMove.BlockAim(self, hand, opponent));
+            if (swing.Running && swing.Aim(self, hand, opponent, out var bashAim)) { Set(ref active, ref aim, bashAim); striking = swing.InStrike; }
+            else if (pressed) { Set(ref active, ref aim, SwingMove.BlockAim(self, hand, opponent)); striking = false; }
             return;
         }
         if (pressed && !swing.Running)
@@ -131,7 +135,8 @@ public class PlayerBrain : IFighterBrain
             swing.Start(count % 2 == 0 ? SwingMove.Kind.Chop : SwingMove.Kind.Slash, SwingWindUp);
             count++;
         }
-        if (swing.Running && swing.Aim(self, hand, opponent, out var swingAim)) Set(ref active, ref aim, swingAim);
+        // Only the driving part of a swing can hurt; the wind-up and recovery can't.
+        if (swing.Running && swing.Aim(self, hand, opponent, out var swingAim)) { Set(ref active, ref aim, swingAim); striking = swing.InStrike; }
     }
 
     static void Set(ref bool active, ref Vector2 aim, Vector2 value)

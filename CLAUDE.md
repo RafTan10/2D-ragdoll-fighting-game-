@@ -122,6 +122,11 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       when crowded) shoves the whole body (`Balance.Bashed`) without damage → `HitEvents.Bashed`. Visuals: impact star
       + streak (`ImpactFX`), bash ring, blade motion trails (TrailRenderer on the tip, on above 6 m/s). Stance widened,
       higher foot lift. Measured: ~40 s rounds, 16 bashes per round, fighters stayed standing.
+- [x] User fix: **touching never hurts.** Only a hand that is attacking (`Fighter.Hand.Striking`, from
+      `FighterInput.mainStriking/offStriking` = the driving part of a swing/bash, or a free-aimed weapon hand) can deal
+      damage, and only with impulse ≥ `Weapon.MinImpact` 2. A **shield only blocks while held** (L/R/K/J button, or the
+      AI blocking): lowered, it hangs at the side and its colliders become triggers (`Weapon.UpdateShieldGuard`).
+      Measured (Hard vs Hard, 40 s): crowding without swings = 0 damage; 12 hits (avg impulse 4.7), 20 blocks.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites

@@ -23,6 +23,8 @@ public class Fighter : MonoBehaviour
         public bool Active;
         /// <summary>World offset from the shoulder that the hand reaches for.</summary>
         public Vector2 Aim;
+        /// <summary>Attacking right now (not guarding, blocking or resting): only then can its weapon deal damage.</summary>
+        public bool Striking;
         public WeaponDefinition weapon;
         public Weapon weaponObject;
         public Rigidbody2D upper, lower;
@@ -108,6 +110,7 @@ public class Fighter : MonoBehaviour
         {
             input = default;
             MainHand.Active = OffHand.Active = false;
+            MainHand.Striking = OffHand.Striking = false;
             return;
         }
         input = Brain.Think(this, Opponent);
@@ -117,6 +120,8 @@ public class Fighter : MonoBehaviour
         MainHand.Aim = input.mainAim;
         OffHand.Active = input.offActive;
         OffHand.Aim = input.offAim;
+        MainHand.Striking = input.mainActive && input.mainStriking;
+        OffHand.Striking = input.offActive && input.offStriking;
     }
 
     void FixedUpdate()

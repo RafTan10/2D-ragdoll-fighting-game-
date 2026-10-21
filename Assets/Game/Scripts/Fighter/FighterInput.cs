@@ -12,6 +12,11 @@ public struct FighterInput
     /// <summary>A swing is in its striking phase: the body leans in and lunges with it.</summary>
     public bool attacking;
 
+    /// <summary>The main hand is actually attacking (swinging, thrusting, bashing, or freely aimed by the player).
+    /// Only a striking weapon can deal damage — resting or brushing contact never hurts.</summary>
+    public bool mainStriking;
+    public bool offStriking;
+
     /// <summary>The main hand (weapon) is being controlled this frame; otherwise it relaxes into guard.</summary>
     public bool mainActive;
     /// <summary>Where the main hand reaches for, as a world-space offset from its shoulder. Clamped to arm reach.</summary>

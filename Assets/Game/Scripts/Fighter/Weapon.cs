@@ -23,7 +23,7 @@ public class Weapon : MonoBehaviour
     /// <summary>A hit with this impulse (N·s) does the weapon's listed damage.</summary>
     public static float ReferenceImpact = 5f; // measured: landed hits average ~3.4 N·s, solid ones 5–10
     /// <summary>Hits below this impulse do nothing (resting contact, light grazes).</summary>
-    public static float MinImpact = 1.2f;
+    public static float MinImpact = 2f;
     public static float MaxImpact = 30f;
     /// <summary>Same body part can't be hit again by this weapon for this long.</summary>
     public static float PartCooldown = 0.2f;
@@ -58,6 +58,7 @@ public class Weapon : MonoBehaviour
     void FixedUpdate()
     {
         // Whoosh when the striking part rushes through the air (each time it crosses the speed).
+        if (IsShield) UpdateShieldGuard();
         if (strikeCollider == null || owner == null || owner.IsHelpless) return;
         if (body == null) body = GetComponent<Rigidbody2D>();
         if (trail != null) trail.emitting = !IsShield && body.GetPointVelocity(strikeCollider.bounds.center).magnitude > TrailSpeed;
@@ -67,10 +68,26 @@ public class Weapon : MonoBehaviour
         else if (whooshing && speed < WhooshSpeed * 0.6f) whooshing = false;
     }
 
+    Collider2D[] shieldColliders;
+
+    /// <summary>
+    /// A shield only defends while it's held up (its hand's button pressed, or the AI blocking/bashing).
+    /// Lowered, it hangs at the side and blades pass it: its colliders become triggers.
+    /// A fallen fighter's shield stays solid so it lies on the floor.
+    /// </summary>
+    void UpdateShieldGuard()
+    {
+        if (shieldColliders == null) shieldColliders = GetComponents<Collider2D>();
+        bool raised = owner == null || owner.IsHelpless || (hand != null && hand.Active);
+        foreach (var c in shieldColliders) if (c.isTrigger == raised) c.isTrigger = !raised;
+    }
+
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (owner == null || owner.IsHelpless || strikeCollider == null) return; // limp flailing doesn't count
         if (collision.otherCollider != strikeCollider) return; // the handle only bumps
+        // Only an attacking hand hurts: a weapon resting, guarding, walking into someone or brushing past never does.
+        if (hand == null || !hand.Striking) return;
         if (lastHitOn.TryGetValue(collision.collider, out float last) && Time.time - last < PartCooldown) return;
 
         // How hard: the solver's impulse at the contacts, or speed × mass if it reports none.
@@ -95,7 +112,7 @@ public class Weapon : MonoBehaviour
         {
             var bashed = collision.collider.GetComponent<BodyPart>();
             if (bashed == null || bashed.fighter == owner || bashed.fighter.IsHelpless) return;
-            if (speed < BashMinSpeed || hand == null || !hand.Active) return;
+            if (speed < BashMinSpeed) return;
             lastHitOn[collision.collider] = Time.time;
             Vector2 push = new Vector2(Mathf.Sign(bashed.fighter.Torso.position.x - owner.Torso.position.x), 0f);
             float bashImpact = Mathf.Max(impact, speed * mass);

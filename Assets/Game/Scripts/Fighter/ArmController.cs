@@ -20,7 +20,8 @@ public class ArmController : MonoBehaviour
     [Header("Guard poses (shoulder, elbow degrees; 0 = hanging down, + = forward)")]
     [SerializeField] Vector2 weaponGuard = new Vector2(-10f, 22f);
     [SerializeField] Vector2 offWeaponGuard = new Vector2(5f, 35f);
-    [SerializeField] Vector2 shieldGuard = new Vector2(45f, 50f);
+    [Tooltip("Shield lowered (button not held): hanging at the side, not covering the body.")]
+    [SerializeField] Vector2 shieldGuard = new Vector2(6f, 18f);
 
     Fighter fighter;
 

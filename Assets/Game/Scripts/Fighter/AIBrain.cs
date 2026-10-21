@@ -98,6 +98,9 @@ public class AIBrain : IFighterBrain
         }
 
         input.attacking = mainSwing.InStrike || offSwing.InStrike;
+        // Only the driving part of a swing or bash can hurt; parries, blocks and guard never do.
+        input.mainStriking = mainSwing.InStrike;
+        input.offStriking = offSwing.InStrike;
         input.move = move;
         input.hop = hop;
         input.jump = jump;
