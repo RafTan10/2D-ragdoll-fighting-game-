@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7273a69952651543b3a4fd7d7015c42, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::GameDatabase
+  fighters:
+  - {fileID: 11400000, guid: cfd1370d96adacd4d87351098b301f94, type: 2}
+  - {fileID: 11400000, guid: efcf27f7bdded184cbbaf37959cc892b, type: 2}
+  - {fileID: 11400000, guid: 6208edb196414ee40bcb83012946c999, type: 2}
+  weapons:
+  - {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}
+  - {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
+  - {fileID: 11400000, guid: a67dcf09cc8544845902655910f94613, type: 2}
+  - {fileID: 11400000, guid: a377886c5ad5ee347869a178427c822e, type: 2}
+  - {fileID: 11400000, guid: cc9217d9889c0b04295a61411d7e8cde, type: 2}
+  - {fileID: 11400000, guid: 1aae5549e21ca4d41a8de13d4866e954, type: 2}
+  arenas:
+  - {fileID: 11400000, guid: 8226e8828d88a154e80a558017a468e4, type: 2}
+  aiProfiles:
+  - {fileID: 11400000, guid: ae1e38f921c9ed542824953ce04848a6, type: 2}
+  - {fileID: 11400000, guid: c84c8b01944d17a418a5a0f846150803, type: 2}
+  - {fileID: 11400000, guid: 84ab1d68b8ed0474bb43c1df5ac1f2df, type: 2}
+  spriteMaterial: {fileID: 2100000, guid: e105b2a8af2db34479871696bfef5cb7, type: 2}

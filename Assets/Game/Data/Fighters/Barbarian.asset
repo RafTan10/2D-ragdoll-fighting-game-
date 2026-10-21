@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f007084aa160f4599c5b04a858c376, type: 3}
+  m_Name: Barbarian
+  m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
+  displayName: Barbarian
+  head: {fileID: 21300000, guid: 786aafcd1406b4442b264b2aef52e9b4, type: 3}
+  torso: {fileID: 21300000, guid: d3f639ae10962dd478399f288bb64ea3, type: 3}
+  upperArm: {fileID: 21300000, guid: ba55017736a7382409cf07691132479f, type: 3}
+  lowerArm: {fileID: 21300000, guid: 374266b3f2188124685bc8c03837daa2, type: 3}
+  upperLeg: {fileID: 21300000, guid: 0990a945e0b5b6741bf52e03a3f60d05, type: 3}
+  lowerLeg: {fileID: 21300000, guid: f245e3018519c974fa17e064040b1446, type: 3}
+  cape: {fileID: 21300000, guid: 4b3e2c4d72007a546aa6cd55f81e44fd, type: 3}
+  maxHealth: 120
+  strength: 1.15
+  walkSpeed: 1.9
+  weight: 1.15
+  endurance: 1
+  backLimbTint: {r: 0.76, g: 0.74, b: 0.72, a: 1}
+  headArmor: 3
+  torsoArmor: 3
+  armArmor: 0
+  legArmor: 1
+  mainHand: {fileID: 11400000, guid: a67dcf09cc8544845902655910f94613, type: 2}
+  offHand: {fileID: 11400000, guid: a377886c5ad5ee347869a178427c822e, type: 2}

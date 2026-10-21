@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec3d08db6e82a9048bbb7bd68c356135, type: 3}
+  m_Name: Hard
+  m_EditorClassIdentifier: Assembly-CSharp::AIProfile
+  displayName: Hard
+  reactionTime: 0.18
+  windUp: {x: 0.2, y: 0.4}
+  recovery: {x: 0.2, y: 0.5}
+  aggression: 0.85
+  blockChance: 0.7
+  hopChance: 0.15
+  damageMultiplier: 1.2
