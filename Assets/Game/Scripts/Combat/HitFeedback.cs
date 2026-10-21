@@ -22,6 +22,7 @@ public class HitFeedback : MonoBehaviour
         HitEvents.Hit += OnHit;
         HitEvents.Blocked += OnBlocked;
         HitEvents.Bashed += OnBashed;
+        HitEvents.ArmorBroken += OnArmorBroken;
     }
 
     void OnDisable()
@@ -29,6 +30,21 @@ public class HitFeedback : MonoBehaviour
         HitEvents.Hit -= OnHit;
         HitEvents.Blocked -= OnBlocked;
         HitEvents.Bashed -= OnBashed;
+        HitEvents.ArmorBroken -= OnArmorBroken;
+    }
+
+    /// <summary>Armour falling apart: a burst of shards and sparks, a heavy clank, a short freeze.</summary>
+    void OnArmorBroken(ArmorBreakInfo info)
+    {
+        bool metal = FighterDefinition.IsHard(info.material);
+        ImpactFX.Bash(info.point, 1.3f);
+        ImpactFX.Hit(info.point, Vector2.up, 1.4f, new Color(1f, 0.9f, 0.6f, 1f));
+        BloodFX.Dust(info.point, Vector2.up, 30);
+        if (metal) BloodFX.Sparks(info.point, 24);
+        GameFeel.Play(metal ? GameFeel.Sound.Metal : GameFeel.Sound.Wood, 1f);
+        GameFeel.Play(GameFeel.Sound.Thud, 0.6f);
+        GameFeel.HitStop(heavyHitStop);
+        if (CameraRig.Current != null) CameraRig.Current.AddTrauma(heavyTrauma);
     }
 
     void OnBashed(BashInfo bash)

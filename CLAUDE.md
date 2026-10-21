@@ -127,6 +127,16 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       damage, and only with impulse ≥ `Weapon.MinImpact` 2. A **shield only blocks while held** (L/R/K/J button, or the
       AI blocking): lowered, it hangs at the side and its colliders become triggers (`Weapon.UpdateShieldGuard`).
       Measured (Hard vs Hard, 40 s): crowding without swings = 0 damage; 12 hits (avg impulse 4.7), 20 blocks.
+- [x] User round 5 ("too few hits, boring"): **every touch of a striking part hurts again** — a swing
+      (`Hand.Striking`) by impulse (share 0.25–1.8 of listed damage), any other touch by contact speed
+      (`Weapon.TouchFullSpeed` 8 m/s, share 0.08–0.3; impulse would make a pushed heavy weapon hit like a swing).
+      Weapon-on-weapon only counts as a block above the weapon's `minImpactSpeed` and 1.2 N·s.
+      **Breakable armour** (`ArmorController`, per region): plate 80 / mail 55 / leather 32 durability; a blow wears
+      it by its full damage while only part reaches the body (protection fades to 50% as it wears); at 0 it breaks →
+      region becomes Skin (×1.15, bleeds), `HitEvents.ArmorBroken` → shards/sparks/clank/hit-stop, HUD notice.
+      Worn armour sprites dull (`RagdollBody.Wear`); HUD shows 4 armour segments (head/torso/arms/legs) under stamina.
+      Measured (Knight vs Barbarian, Hard, 60 s): rounds ~25–30 s, ~110 hits; Barbarian (axe + mace, 120 hp) wins
+      most rounds — it did before this change too, so tune fighters/AI if the Knight feels weak.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -154,7 +164,8 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
 Assets/Game/
   Scripts/Data/      FighterDefinition, WeaponDefinition, ArenaDefinition, AIProfile, GameDatabase
   Scripts/Fighter/   Fighter (coordinator: health, input, events), RagdollBody (build, mirror, ground), BalanceController,
-                     LocomotionController, ArmController (IK), StaminaController, KnockdownController, MotorDrive, PixelBounds,
+                     LocomotionController, ArmController (IK), StaminaController, KnockdownController, ArmorController
+                     (breakable armour), MotorDrive, PixelBounds,
                      BodyPart, Weapon (hit detection + damage), HandMoves (SwingMove, BlockAim), FighterInput,
                      PlayerBrain, AIBrain, ScriptBrain (tests)
   Scripts/Combat/    HitEvents (Hit / Blocked events), HitFeedback (effects, sound, hit-stop, camera trauma)
@@ -240,9 +251,9 @@ Facing: when a fighter ends up on the other side of the opponent (jump-over, pus
 weapon fixed joints are rebuilt) so both face each other again. Jumps tuck the legs; a jump into a raised weapon
 still collides, so clearing the opponent depends on distance and their guard.
 
-Damage only comes from a weapon's **striking part** (blade / head / fist) moving fast at the contact point
-(≥ `minImpactSpeed`, default 2.5 m/s, and impulse ≥ 2 N·s), and only while its hand is attacking
-(`Hand.Striking` — touching, guarding or resting never hurts; a lowered shield doesn't block): damage × (impulse / 5 N·s, clamped 0.3–1.8)
-× body part (head 1.5) × armour. Heavier weapons hit harder at the same speed.
+Damage only comes from a weapon's **striking part** (blade / head / fist). Every touch counts (≥ 0.5 m/s): a swing
+(`Hand.Striking`) does damage × (impulse / 5 N·s, clamped 0.25–1.8), any other touch damage × (speed / 8 m/s,
+clamped 0.08–0.3); then × body part (head 1.5) × fighter strength, and armour (`ArmorController`) soaks part of it
+and wears down until it breaks. Heavier weapons swing harder at the same speed. A shield only blocks while held.
 Weapon on weapon or shield = block (sparks, clank, blocker loses stamina). A helpless (down / fainted) fighter's
 flailing never deals damage.

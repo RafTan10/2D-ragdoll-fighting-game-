@@ -390,6 +390,15 @@ public class RagdollBody : MonoBehaviour
         baseColors[sr] = Color.Lerp(c, bruise, Mathf.Clamp01(damage * 0.012f));
     }
 
+    /// <summary>Dulls a part's armour a little more (<paramref name="amount"/> 0..1 of the way to a dark, greyed tone).</summary>
+    public void Wear(SpriteRenderer sr, float amount)
+    {
+        if (sr == null || !baseColors.TryGetValue(sr, out var c)) return;
+        float grey = (c.r + c.g + c.b) / 3f;
+        var worn = new Color(grey * 0.55f, grey * 0.5f, grey * 0.45f, c.a);
+        baseColors[sr] = sr.color = Color.Lerp(c, worn, Mathf.Clamp01(amount));
+    }
+
     /// <summary>Torso or head touching the floor (a fallen body).</summary>
     public bool BodyOnGround()
     {

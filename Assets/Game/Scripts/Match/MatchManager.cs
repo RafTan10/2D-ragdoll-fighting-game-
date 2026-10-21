@@ -38,6 +38,20 @@ public class MatchManager : MonoBehaviour
 
     const float SpawnX = 1.6f;
 
+    // "Torso armour broken!" under the fighter's bars for a moment.
+    string playerNotice, enemyNotice;
+    float playerNoticeUntil, enemyNoticeUntil;
+
+    void OnEnable() => HitEvents.ArmorBroken += OnArmorBroken;
+    void OnDisable() => HitEvents.ArmorBroken -= OnArmorBroken;
+
+    void OnArmorBroken(ArmorBreakInfo info)
+    {
+        string text = info.region + " armour broken!";
+        if (info.fighter == player) { playerNotice = text; playerNoticeUntil = Time.unscaledTime + 2.5f; }
+        else if (info.fighter == enemy) { enemyNotice = text; enemyNoticeUntil = Time.unscaledTime + 2.5f; }
+    }
+
     void Start()
     {
         if (database == null) { Debug.LogError("MatchManager needs a GameDatabase."); enabled = false; return; }
@@ -256,9 +270,44 @@ public class MatchManager : MonoBehaviour
         GUI.DrawTexture(sFill, Texture2D.whiteTexture);
         GUI.color = Color.white;
 
-        var label = new Rect(r.x, stam.yMax + 2, r.width, 22);
+        float below = ArmorBar(new Rect(r.x, stam.yMax + 2, r.width * 0.5f, 7), f, rightAligned, r.xMax);
+
+        var label = new Rect(r.x, below + 2, r.width, 22);
         normal.alignment = rightAligned ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
         string status = f.IsKnockedOut ? "" : f.State == Fighter.Condition.Fainted ? "   FAINTED" : f.State == Fighter.Condition.Down ? "   DOWN" : "";
+        bool mine = f == player;
+        string notice = (mine ? playerNoticeUntil : enemyNoticeUntil) > Time.unscaledTime ? (mine ? playerNotice : enemyNotice) : null;
+        if (notice != null) status += "   " + notice;
         GUI.Label(label, rightAligned ? status.Trim() + "   " + f.Definition.displayName : f.Definition.displayName + status, normal);
+    }
+
+    static readonly PartKind[] ArmorRegions = { PartKind.Head, PartKind.Torso, PartKind.Arm, PartKind.Leg };
+
+    /// <summary>
+    /// Four small segments (head, torso, arms, legs), steel-blue by how much armour is left; returns the bottom edge.
+    /// Regions with no breakable armour stay dark; broken ones turn dark red.
+    /// </summary>
+    float ArmorBar(Rect r, Fighter f, bool rightAligned, float rightEdge)
+    {
+        if (f.Armor == null || !f.Armor.HasAny) return r.y - 2;
+        if (rightAligned) r.x = rightEdge - r.width;
+        float gap = 3f, seg = (r.width - gap * 3f) / 4f;
+        for (int i = 0; i < 4; i++)
+        {
+            int slot = rightAligned ? 3 - i : i;
+            var box = new Rect(r.x + slot * (seg + gap), r.y, seg, r.height);
+            var kind = ArmorRegions[i];
+            GUI.color = new Color(0f, 0f, 0f, 0.8f);
+            GUI.DrawTexture(box, Texture2D.whiteTexture);
+            if (!f.Armor.Has(kind)) continue;
+            float t = f.Armor.Integrity(kind);
+            if (t <= 0f) { GUI.color = new Color(0.45f, 0.08f, 0.08f); GUI.DrawTexture(new Rect(box.x + 1, box.y + 1, box.width - 2, box.height - 2), Texture2D.whiteTexture); continue; }
+            var fill = new Rect(box.x + 1, box.y + 1, (box.width - 2) * t, box.height - 2);
+            if (rightAligned) fill.x = box.xMax - 1 - fill.width;
+            GUI.color = Color.Lerp(new Color(0.85f, 0.45f, 0.2f), new Color(0.62f, 0.75f, 0.9f), t);
+            GUI.DrawTexture(fill, Texture2D.whiteTexture);
+        }
+        GUI.color = Color.white;
+        return r.yMax;
     }
 }

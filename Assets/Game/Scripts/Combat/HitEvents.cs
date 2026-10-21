@@ -16,8 +16,19 @@ public struct HitInfo
     /// <summary>Direction the blow travels (into the victim).</summary>
     public Vector2 direction;
     public HitStrength strength;
-    /// <summary>Landed on plate or mail.</summary>
+    /// <summary>Landed on intact plate or mail.</summary>
     public bool armoured;
+    /// <summary>Durability the struck armour lost (0 on bare or cloth parts).</summary>
+    public float armorWear;
+}
+
+/// <summary>A region's armour wore through and fell apart.</summary>
+public struct ArmorBreakInfo
+{
+    public Fighter fighter;
+    public PartKind region;
+    public ArmorMaterial material;
+    public Vector2 point;
 }
 
 /// <summary>A strike was stopped by a weapon or shield.</summary>
@@ -46,6 +57,13 @@ public static class HitEvents
     public static event Action<HitInfo> Hit;
     public static event Action<BlockInfo> Blocked;
     public static event Action<BashInfo> Bashed;
+    public static event Action<ArmorBreakInfo> ArmorBroken;
+
+    public static void RaiseArmorBroken(ArmorBreakInfo info)
+    {
+        if (LogHits) Debug.Log($"[Armour] {info.fighter.Definition.displayName}'s {info.region} {info.material} broke");
+        ArmorBroken?.Invoke(info);
+    }
 
     public static void RaiseBashed(BashInfo bash)
     {

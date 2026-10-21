@@ -6,7 +6,8 @@ using UnityEngine;
 /// A 2D ragdoll fighter: the thin coordinator. It holds health, the brain and its input, and runs the one-job
 /// components in a fixed order every physics step:
 ///   <see cref="RagdollBody"/> (the parts and joints), <see cref="StaminaController"/>, <see cref="KnockdownController"/>,
-///   <see cref="ArmController"/>, <see cref="LocomotionController"/>, <see cref="BalanceController"/>.
+///   <see cref="ArmController"/>, <see cref="LocomotionController"/>, <see cref="BalanceController"/>
+///   (plus <see cref="ArmorController"/>, breakable armour, which only reacts to hits).
 /// Hands are aimed, not animated: a brain gives an aim point per hand and the arm motors chase it,
 /// so weapons carry real momentum. Only a weapon's striking part deals damage (see <see cref="Weapon"/>).
 /// </summary>
@@ -23,7 +24,7 @@ public class Fighter : MonoBehaviour
         public bool Active;
         /// <summary>World offset from the shoulder that the hand reaches for.</summary>
         public Vector2 Aim;
-        /// <summary>Attacking right now (not guarding, blocking or resting): only then can its weapon deal damage.</summary>
+        /// <summary>Attacking right now (not guarding, blocking or resting): its hits count fully; other touches hurt less.</summary>
         public bool Striking;
         public WeaponDefinition weapon;
         public Weapon weaponObject;
@@ -43,6 +44,7 @@ public class Fighter : MonoBehaviour
     public ArmController Arms { get; private set; }
     public LocomotionController Locomotion { get; private set; }
     public BalanceController Balance { get; private set; }
+    public ArmorController Armor { get; private set; }
 
     // ---------------------------------------------------------------- state
     public FighterDefinition Definition { get; private set; }
@@ -91,6 +93,7 @@ public class Fighter : MonoBehaviour
         f.Arms = root.AddComponent<ArmController>();
         f.Locomotion = root.AddComponent<LocomotionController>();
         f.Balance = root.AddComponent<BalanceController>();
+        f.Armor = root.AddComponent<ArmorController>();
 
         f.Body.Build(f, def, mainWeapon, offWeapon, feet, facing, sortBase, material);
         f.StaminaSystem.Init(f, def, mainWeapon, offWeapon);
@@ -98,6 +101,7 @@ public class Fighter : MonoBehaviour
         f.Arms.Init(f);
         f.Locomotion.Init(f);
         f.Balance.Init(f);
+        f.Armor.Init(f, def);
         return f;
     }
 

@@ -3,9 +3,10 @@ using UnityEngine;
 
 /// <summary>
 /// Hit detection and damage for one weapon (or a bare forearm, definition = null, for fists).
-/// Only the <see cref="strikeCollider"/> (blade / head / fist) counts. How hard a hit is comes from the
-/// collision <b>impulse</b> — speed × mass — so a heavy mace lands harder than a dagger at the same speed and a
-/// resting weapon does nothing. Weapon on weapon or shield is a block. Results go out through <see cref="HitEvents"/>;
+/// Only the <see cref="strikeCollider"/> (blade / head / fist) counts. Every touch of it on a body hurts; how much
+/// comes from the collision <b>impulse</b> — speed × mass — so a heavy mace lands harder than a dagger at the same
+/// speed, a graze does a little and a real swing (the hand is <see cref="Fighter.Hand.Striking"/>) counts fully.
+/// Armour soaks blows first and breaks (<see cref="ArmorController"/>). Weapon on weapon or shield is a block. Results go out through <see cref="HitEvents"/>;
 /// this class applies damage, knockback and stagger but plays no effects itself.
 /// </summary>
 public class Weapon : MonoBehaviour
@@ -22,8 +23,18 @@ public class Weapon : MonoBehaviour
     const float FistMass = 0.6f;
     /// <summary>A hit with this impulse (N·s) does the weapon's listed damage.</summary>
     public static float ReferenceImpact = 5f; // measured: landed hits average ~3.4 N·s, solid ones 5–10
-    /// <summary>Hits below this impulse do nothing (resting contact, light grazes).</summary>
-    public static float MinImpact = 2f;
+    /// <summary>Touches below this impulse / relative speed do nothing (a blade resting still against someone).</summary>
+    public static float MinImpact = 0.2f;
+    public static float TouchMinSpeed = 0.5f;
+    /// <summary>Weakest hit, as a share of the weapon's listed damage (before the touch share and armour).</summary>
+    public static float MinForce = 0.25f;
+    /// <summary>
+    /// A touch from a hand that isn't attacking (guard, walking into a blade, recovery) does this share of the listed
+    /// damage per m/s of contact speed ÷ <see cref="TouchFullSpeed"/>, between the min and max share.
+    /// </summary>
+    public static float TouchFullSpeed = 8f, MinTouchForce = 0.08f, MaxTouchForce = 0.3f;
+    /// <summary>Weapon-on-weapon contact below this impulse is just a bump, not a block.</summary>
+    public static float BlockMinImpact = 1.2f;
     public static float MaxImpact = 30f;
     /// <summary>Same body part can't be hit again by this weapon for this long.</summary>
     public static float PartCooldown = 0.2f;
@@ -86,8 +97,6 @@ public class Weapon : MonoBehaviour
     {
         if (owner == null || owner.IsHelpless || strikeCollider == null) return; // limp flailing doesn't count
         if (collision.otherCollider != strikeCollider) return; // the handle only bumps
-        // Only an attacking hand hurts: a weapon resting, guarding, walking into someone or brushing past never does.
-        if (hand == null || !hand.Striking) return;
         if (lastHitOn.TryGetValue(collision.collider, out float last) && Time.time - last < PartCooldown) return;
 
         // How hard: the solver's impulse at the contacts, or speed × mass if it reports none.
@@ -110,6 +119,7 @@ public class Weapon : MonoBehaviour
         // Shield bash: a shield driven into the opponent's body shoves them back and rocks them, no damage.
         if (IsShield)
         {
+            if (hand == null || !hand.Striking) return; // a held-up guard pushing into someone isn't a bash
             var bashed = collision.collider.GetComponent<BodyPart>();
             if (bashed == null || bashed.fighter == owner || bashed.fighter.IsHelpless) return;
             if (speed < BashMinSpeed) return;
@@ -122,14 +132,15 @@ public class Weapon : MonoBehaviour
             return;
         }
 
-        float minSpeed = definition != null ? definition.minImpactSpeed : FistMinSpeed;
         StatContacts++;
-        if (speed < minSpeed || impact < MinImpact) { StatTooSlow++; return; }
+        if (speed < TouchMinSpeed || impact < MinImpact) { StatTooSlow++; return; }
 
-        // Steel on steel, or on a shield: a block.
+        // Steel on steel, or on a shield: a block — but only a real blow counts; blades resting together just bump.
         var otherWeapon = collision.collider.GetComponent<Weapon>();
         if (otherWeapon != null && otherWeapon.owner != owner && otherWeapon.definition != null)
         {
+            float blockSpeed = definition != null ? definition.minImpactSpeed : FistMinSpeed;
+            if (speed < blockSpeed || impact < BlockMinImpact) return;
             lastHitOn[collision.collider] = Time.time;
             StatBlocked++;
             float cost = impact * (otherWeapon.IsShield ? 1.2f : 0.8f);
@@ -141,13 +152,18 @@ public class Weapon : MonoBehaviour
         var part = collision.collider.GetComponent<BodyPart>();
         if (part == null || part.fighter == owner || part.fighter.IsKnockedOut) return;
 
-        float force = Mathf.Clamp(impact / ReferenceImpact, 0.3f, 1.8f);
-        float damage = (definition != null ? definition.damage : FistDamage)
-                       * force
-                       * part.damageMultiplier
-                       * FighterDefinition.DamageThrough(part.armor)
-                       * owner.Definition.strength
-                       * owner.DamageMultiplier;
+        // A real swing (Hand.Striking) hurts by its impulse. Any other touch of the striking part hurts a little, by
+        // its speed — not its impulse, or a heavy weapon merely pushed against someone would hit like a swing.
+        bool swing = hand != null && hand.Striking;
+        float force = swing ? Mathf.Clamp(impact / ReferenceImpact, MinForce, 1.8f)
+                            : Mathf.Clamp(speed / TouchFullSpeed, MinTouchForce, MaxTouchForce);
+        float raw = (definition != null ? definition.damage : FistDamage)
+                    * force
+                    * part.damageMultiplier
+                    * owner.Definition.strength
+                    * owner.DamageMultiplier;
+        // Armour takes the blow first and wears down; what gets through hurts the body.
+        float damage = part.fighter.Armor.Absorb(part, raw, out float armorWear, out bool armoured);
 
         lastHitOn[collision.collider] = Time.time;
         StatHits++;
@@ -171,7 +187,7 @@ public class Weapon : MonoBehaviour
         HitEvents.RaiseHit(new HitInfo
         {
             attacker = owner, victim = part.fighter, part = part, damage = damage, impact = impact,
-            point = point, direction = dir, strength = strength, armoured = FighterDefinition.IsHard(part.armor)
+            point = point, direction = dir, strength = strength, armoured = armoured, armorWear = armorWear
         });
         part.fighter.TakeDamage(damage, part);
     }
