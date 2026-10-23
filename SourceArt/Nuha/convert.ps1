@@ -1,61 +1,34 @@
-# Converts the Nuha ragdoll pack (front view, 2x PNGs, rig units) into the game's fighter parts (64 PPU pixel sprites).
-param([string]$Src, [string]$Dst, [double]$S = 0.1175)  # $S = game pixels per source PNG pixel
-Add-Type -AssemblyName System.Drawing
+# Nuha: front-view ragdoll pack (png/ at 2x, rig.json in source units, neck at y 0) -> the game's fighter parts.
+#   powershell -File SourceArt\Nuha\convert.ps1            (writes Assets\Game\Art\Fighters\Nuha\*.png)
+# Then in Unity: ContentTools.CreateFighter("Assets/Game/Art/Fighters/Nuha", "Sword", null) keeps her stats.
+param([string]$Src, [string]$Dst = "$PSScriptRoot\..\..\Assets\Game\Art\Fighters\Nuha", [double]$S = 0.1175)
+. "$PSScriptRoot\..\tools\PixelParts.ps1"
+
+if (-not $Src) {
+    $Src = "$env:TEMP\nuha_src"
+    if (-not (Test-Path "$Src\Nuha Ragdoll\png")) { Expand-Archive "$PSScriptRoot\Nuha Ragdoll.zip" $Src -Force }
+    $Src = "$Src\Nuha Ragdoll\png"
+}
 New-Item -ItemType Directory -Force $Dst | Out-Null
 
-function Load($n) { [System.Drawing.Bitmap]::FromFile((Join-Path $Src "$n.png")) }
+# Head: the hair above the neck behind the face; bottom edge = the neck (hair_back row 272 = rig y 0).
+# head.png's neck pivot is (92, 224), so its top-left sits at (116 - 92, 272 - 224) on the 232-wide canvas.
+$hair = Load-Part $Src "hair_back"; $head = Load-Part $Src "head"
+Save-Part (Compose 232 272 @(@((Crop-Rows $hair 0 272), 0, 0), @($head, 24, 48))) "$Dst\head.png" $S
 
-# Rows r0..r1 of a bitmap (full width), padded to the given canvas if needed.
-function Crop($bmp, [int]$r0, [int]$r1) {
-    $h = $r1 - $r0
-    $out = New-Object System.Drawing.Bitmap $bmp.Width, $h, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($out)
-    $g.DrawImage($bmp, (New-Object System.Drawing.Rectangle 0, 0, $bmp.Width, $h), (New-Object System.Drawing.Rectangle 0, $r0, $bmp.Width, $h), [System.Drawing.GraphicsUnit]::Pixel)
-    $g.Dispose(); $out
-}
+# Long hair below the neck -> cape (the rig hangs capes 3 game px below the neck; 3 px = 25.5 source px).
+Save-Part (Crop-Rows $hair 298 500) "$Dst\cape.png" $S
 
-# Downscale smoothly, then make alpha hard (pixel-art edges) and save.
-function Save($bmp, [string]$name) {
-    $w = [Math]::Max(1, [int][Math]::Round($bmp.Width * $S)); $h = [Math]::Max(1, [int][Math]::Round($bmp.Height * $S))
-    $out = New-Object System.Drawing.Bitmap $w, $h, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-    $g = [System.Drawing.Graphics]::FromImage($out)
-    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-    $g.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
-    $attr = New-Object System.Drawing.Imaging.ImageAttributes; $attr.SetWrapMode([System.Drawing.Drawing2D.WrapMode]::TileFlipXY)
-    $g.DrawImage($bmp, (New-Object System.Drawing.Rectangle 0, 0, $w, $h), 0, 0, $bmp.Width, $bmp.Height, [System.Drawing.GraphicsUnit]::Pixel, $attr)
-    $g.Dispose()
-    for ($y = 0; $y -lt $h; $y++) { for ($x = 0; $x -lt $w; $x++) {
-        $c = $out.GetPixel($x, $y)
-        if ($c.A -lt 110) { $out.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(0, 0, 0, 0)) }
-        else { $out.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(255, $c.R, $c.G, $c.B)) }
-    } }
-    $path = Join-Path $Dst "$name.png"; $out.Save($path, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose()
-    "$name ${w}x$h"
-}
+# Torso spans neck - 3 px .. hip + 3 px (neck row 40, hip row 296); the dress below the hip -> skirt.
+$torso = Load-Part $Src "torso"
+Save-Part (Crop-Rows $torso 14 322) "$Dst\torso.png" $S
+Save-Part (Crop-Rows $torso 296 396) "$Dst\skirt.png" $S
 
-# Head: the hair above the neck drawn behind the face; bottom edge = the neck (rig y 0 = hair row 272).
-$hair = Load "hair_back"; $head = Load "head"
-$canvas = New-Object System.Drawing.Bitmap 232, 272, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$g = [System.Drawing.Graphics]::FromImage($canvas)
-$g.DrawImage($hair, (New-Object System.Drawing.Rectangle 0, 0, 232, 272), (New-Object System.Drawing.Rectangle 0, 0, 232, 272), [System.Drawing.GraphicsUnit]::Pixel)
-# head.png: neck pivot (92,224) → its top-left sits at canvas (116-92, 272-224).
-$g.DrawImage($head, 24, 48, 184, 208); $g.Dispose()
-Save $canvas "head"
-
-# Long hair below the neck → cape slot (hangs from 3 game px below the neck and swings).
-Save (Crop $hair 298 500) "cape"
-
-# Torso: neck (row 40) - 3 px to hip (row 296) + 3 px.  The dress below the hip → skirt (drawn over the legs).
-$torso = Load "torso"
-Save (Crop $torso 14 322) "torso"
-Save (Crop $torso 296 396) "skirt"
-
-# Limbs: from the joint row down (joint at the top edge).
-Save (Crop (Load "upper_arm_R") 36 184) "upper_arm"
-Save (Crop (Load "forearm_R") 24 192) "lower_arm"
-Save (Crop (Load "thigh_R") 30 236) "upper_leg"
-Save (Crop (Load "shin_R") 26 254) "lower_leg"
+# Limbs: from the joint row down (the joint is the top edge). One arm and one leg serve both sides.
+Save-Part (Crop-Rows (Load-Part $Src "upper_arm_R") 36 184) "$Dst\upper_arm.png" $S
+Save-Part (Crop-Rows (Load-Part $Src "forearm_R") 24 192) "$Dst\lower_arm.png" $S
+Save-Part (Crop-Rows (Load-Part $Src "thigh_R") 30 236) "$Dst\upper_leg.png" $S
+Save-Part (Crop-Rows (Load-Part $Src "shin_R") 26 254) "$Dst\lower_leg.png" $S
 
 # The bag hangs from the off hand by its handles (pivot top-centre).
-Save (Load "bag") "hand_prop"
+Save-Part (Load-Part $Src "bag") "$Dst\hand_prop.png" $S

@@ -145,6 +145,12 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       hips → `skirt`, the bag → `hand_prop` on the off hand. Sword in the main hand, off hand = fist + bag.
       Armour: head/arms skin, torso (corset) + legs leather. Stats: 100 hp, weight 0.9, walk 2.4, endurance 1.1.
       Hard AI vs Hard AI she loses to the Knight quickly (no shield, bare head/arms) — tune if the user wants.
+- [x] Fighters from pictures: **`docs/Ragdoll_Style_Guide.md`** (likeness, view/pose, part sizes + joints, pixel style,
+      10× route, armour, stats, deliverables, paste-in prompt) + `/fighter-from-pics`. Shared converter
+      `SourceArt/tools/PixelParts.ps1` (downscale, unsharp mask, hard alpha, light mute, 1 px `#241A1E` inner outline;
+      optional k-means palette — off, it merged Nuha's red flowers). Nuha re-converted with it (crisper eyes/pattern)
+      and buffed: 110 hp, strength 1.15, weight 1, sleeves = Cloth. Still: Hard vs Knight 1 win in 4, vs Barbarian
+      KO'd in 4–8 s — swings to the head reach 57 damage, touches add ~1/3 (see "difficulty & touches" below).
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -187,7 +193,9 @@ Assets/Game/
   Scenes/Arena.unity     the only game scene (everything spawns from data at runtime)
 Assets/Stickman/     earlier 3D stickman experiment — not part of the game
 SourceArt/<Name>/    original art packs + conversion scripts for fighters made outside the pixel conventions
-.claude/commands/    add-fighter.md, add-weapon.md, add-arena.md
+SourceArt/tools/     PixelParts.ps1 (shared hi-res → pixel-part converter)
+docs/                Ragdoll_Style_Guide.md (how to make fighters from photos)
+.claude/commands/    add-fighter.md, add-weapon.md, add-arena.md, fighter-from-pics.md
 ```
 
 ## Pixel art conventions (what the importer expects)

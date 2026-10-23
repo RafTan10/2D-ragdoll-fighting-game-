@@ -22,15 +22,15 @@ MonoBehaviour:
   cape: {fileID: 21300000, guid: facfc7a53f1659042970ab2300eda79c, type: 3}
   skirt: {fileID: 21300000, guid: 22c9e6e41a1307c42aa5f4fef1d9d153, type: 3}
   handProp: {fileID: 21300000, guid: 147e50cddddf1c0459f136fc90d63dc9, type: 3}
-  maxHealth: 100
-  strength: 1
+  maxHealth: 110
+  strength: 1.15
   walkSpeed: 2.4
-  weight: 0.9
+  weight: 1
   endurance: 1.1
   backLimbTint: {r: 0.75, g: 0.75, b: 0.75, a: 1}
   headArmor: 0
   torsoArmor: 2
-  armArmor: 0
+  armArmor: 1
   legArmor: 2
   mainHand: {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
   offHand: {fileID: 0}
