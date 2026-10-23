@@ -83,7 +83,7 @@ public class MatchManager : MonoBehaviour
         arenaObject = ArenaView.Build(arena, mat);
         if (arena.rain) RainFX.Create(mat).transform.SetParent(arenaObject.transform, true);
 
-        player = Fighter.Spawn(playerDef, playerDef.mainHand, playerDef.offHand, new Vector2(-SpawnX, 0f), 1f, 0, mat);
+        player = Fighter.Spawn(playerDef, playerDef.mainHand, playerDef.offHand, new Vector2(-SpawnX, 0f), 1f, 0, mat, ai.playerHitboxWidth);
         enemy = Fighter.Spawn(enemyDef, enemyDef.mainHand, enemyDef.offHand, new Vector2(SpawnX, 0f), -1f, 20, mat);
         SetupCamera(arena);
         player.Opponent = enemy;
@@ -91,6 +91,9 @@ public class MatchManager : MonoBehaviour
         player.Brain = new PlayerBrain();
         enemy.Brain = new AIBrain(ai);
         enemy.DamageMultiplier = ai.damageMultiplier;
+        enemy.TouchesHurt = ai.touchesHurt;
+        player.DamageTaken = ai.playerDamageTaken;
+        player.DamageMultiplier = ai.playerDamageDealt;
         player.KnockedOut += OnKnockedOut;
         enemy.KnockedOut += OnKnockedOut;
 

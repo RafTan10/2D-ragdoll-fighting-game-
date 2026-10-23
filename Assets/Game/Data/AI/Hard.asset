@@ -20,4 +20,8 @@ MonoBehaviour:
   blockChance: 0.7
   hopChance: 0.15
   aimError: 0.07
-  damageMultiplier: 1.2
+  damageMultiplier: 1
+  playerDamageTaken: 0.9
+  playerDamageDealt: 1
+  touchesHurt: 1
+  playerHitboxWidth: 0.85

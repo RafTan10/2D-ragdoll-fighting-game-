@@ -20,8 +20,10 @@ MonoBehaviour:
   upperLeg: {fileID: 21300000, guid: 0990a945e0b5b6741bf52e03a3f60d05, type: 3}
   lowerLeg: {fileID: 21300000, guid: f245e3018519c974fa17e064040b1446, type: 3}
   cape: {fileID: 21300000, guid: 4b3e2c4d72007a546aa6cd55f81e44fd, type: 3}
+  skirt: {fileID: 0}
+  handProp: {fileID: 0}
   maxHealth: 120
-  strength: 1.15
+  strength: 1.05
   walkSpeed: 1.9
   weight: 1.15
   endurance: 1

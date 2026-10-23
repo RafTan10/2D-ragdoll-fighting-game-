@@ -69,7 +69,12 @@ public class Fighter : MonoBehaviour
 
     public IFighterBrain Brain;
     public Fighter Opponent;
+    /// <summary>Multiplies the damage this fighter deals (the AI's difficulty).</summary>
     public float DamageMultiplier = 1f;
+    /// <summary>Multiplies the damage this fighter takes (the player's handicap on easier difficulties).</summary>
+    public float DamageTaken = 1f;
+    /// <summary>Whether this fighter's non-swing weapon touches can hurt (off for the AI on Easy / Normal).</summary>
+    public bool TouchesHurt = true;
 
     public event Action<Fighter> KnockedOut;
 
@@ -79,8 +84,10 @@ public class Fighter : MonoBehaviour
     // ================================================================ building
 
     /// <summary>Builds a fighter with its feet at <paramref name="feet"/>.</summary>
+    /// <param name="hitboxWidth">Scale of the body colliders across limbs, torso and head (the player's edge on easier
+    /// difficulties); the lower legs keep full width so the feet stand the same.</param>
     public static Fighter Spawn(FighterDefinition def, WeaponDefinition mainWeapon, WeaponDefinition offWeapon,
-                                Vector2 feet, float facing, int sortBase, Material material)
+                                Vector2 feet, float facing, int sortBase, Material material, float hitboxWidth = 1f)
     {
         var root = new GameObject("Fighter_" + def.displayName);
         var f = root.AddComponent<Fighter>();
@@ -95,7 +102,7 @@ public class Fighter : MonoBehaviour
         f.Balance = root.AddComponent<BalanceController>();
         f.Armor = root.AddComponent<ArmorController>();
 
-        f.Body.Build(f, def, mainWeapon, offWeapon, feet, facing, sortBase, material);
+        f.Body.Build(f, def, mainWeapon, offWeapon, feet, facing, sortBase, material, hitboxWidth);
         f.StaminaSystem.Init(f, def, mainWeapon, offWeapon);
         f.Knockdown.Init(f);
         f.Arms.Init(f);

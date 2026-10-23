@@ -150,7 +150,14 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       `SourceArt/tools/PixelParts.ps1` (downscale, unsharp mask, hard alpha, light mute, 1 px `#241A1E` inner outline;
       optional k-means palette — off, it merged Nuha's red flowers). Nuha re-converted with it (crisper eyes/pattern)
       and buffed: 110 hp, strength 1.15, weight 1, sleeves = Cloth. Still: Hard vs Knight 1 win in 4, vs Barbarian
-      KO'd in 4–8 s — swings to the head reach 57 damage, touches add ~1/3 (see "difficulty & touches" below).
+      KO'd in 4–8 s — swings to the head reach 57 damage, touches add ~1/3.
+- [x] User round 6 ("player should have the better chance; Barbarian's long weapons hurt by grazing legs"): touch
+      damage from the attacker's own approach speed (≥ 1.5 m/s, share ≤ 0.15), high guard, swing force cap 1.3 + 25%
+      max-health cap per hit, off-hand weapons ×0.6, per-difficulty player advantage + narrower player hitboxes
+      (all in "Damage" under Controls), Barbarian strength 1.15 → 1.05. Measured with a Normal-AI stand-in as the
+      player, 60 s rounds: Knight vs Barbarian ahead/winning 3/3 on Easy and Normal, even-to-losing on Hard; Nuha vs
+      Barbarian Easy 2 wins + 2 ahead of 4, Normal 1 of 4 (still her hardest match-up), Hard lost. Rounds now often
+      run past 60 s on Easy/Normal.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -270,9 +277,16 @@ Facing: when a fighter ends up on the other side of the opponent (jump-over, pus
 weapon fixed joints are rebuilt) so both face each other again. Jumps tuck the legs; a jump into a raised weapon
 still collides, so clearing the opponent depends on distance and their guard.
 
-Damage only comes from a weapon's **striking part** (blade / head / fist). Every touch counts (≥ 0.5 m/s): a swing
-(`Hand.Striking`) does damage × (impulse / 5 N·s, clamped 0.25–1.8), any other touch damage × (speed / 8 m/s,
-clamped 0.08–0.3); then × body part (head 1.5) × fighter strength, and armour (`ArmorController`) soaks part of it
-and wears down until it breaks. Heavier weapons swing harder at the same speed. A shield only blocks while held.
+Damage only comes from a weapon's **striking part** (blade / head / fist). A swing (`Hand.Striking`) does damage ×
+(impulse / 5 N·s, clamped 0.25–1.3). Any other touch hurts only if the attacker's **own** weapon was moving **into**
+the victim at ≥ 1.5 m/s just before contact (`Weapon.ApproachVelocity`, recorded before the physics step) — the
+victim stepping into a resting blade or a blade sliding along a limb does nothing — for damage × (that speed / 16,
+clamped 0.05–0.15). Then × body part (head 1.5) × strength × attacker `DamageMultiplier` × 0.6 for an off-hand
+weapon; armour (`ArmorController`) soaks part and wears down until it breaks; × victim `DamageTaken`; capped at 25%
+of the victim's max health per hit (`Weapon.MaxHitShare`). A shield only blocks while held.
+Difficulty (`AIProfile`, Easy / Normal / Hard): AI damage ×0.7 / 0.9 / 1.0, player damage taken ×0.5 / 0.65 / 0.9,
+player damage dealt ×1.3 / 1.15 / 1.0, AI touches hurt only on Hard, player hitboxes narrowed to 75 / 80 / 85%
+(`playerHitboxWidth`; lower legs keep full width for the feet). Resting weapons are held in a high guard
+(`ArmController.weaponGuard` 35°/65°), not pointed at the opponent's legs.
 Weapon on weapon or shield = block (sparks, clank, blocker loses stamina). A helpless (down / fainted) fighter's
 flailing never deals damage.

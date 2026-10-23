@@ -18,4 +18,14 @@ public class AIProfile : ScriptableObject
     public float aimError = 0.15f;
     [Tooltip("Multiplier on damage this fighter deals.")]
     public float damageMultiplier = 1f;
+
+    [Header("Player advantage at this difficulty")]
+    [Tooltip("Multiplier on damage the player takes (after armour). Below 1 = the player has the edge.")]
+    public float playerDamageTaken = 1f;
+    [Tooltip("Multiplier on damage the player deals. Above 1 = shorter rounds that the player wins more often.")]
+    public float playerDamageDealt = 1f;
+    [Tooltip("Can this AI's weapon hurt by touching (not swinging)? Off on easier difficulties: only real swings count.")]
+    public bool touchesHurt = true;
+    [Tooltip("Scale of the player's hitboxes across each limb and the torso (1 = fitted to the art). Smaller = fewer grazes.")]
+    [Range(0.5f, 1f)] public float playerHitboxWidth = 1f;
 }

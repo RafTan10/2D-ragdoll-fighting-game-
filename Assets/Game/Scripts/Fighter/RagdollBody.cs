@@ -67,12 +67,15 @@ public class RagdollBody : MonoBehaviour
 
     // ================================================================ building
 
+    float hitboxWidth = 1f;
+
     public void Build(Fighter owner, FighterDefinition def, WeaponDefinition mainWeapon, WeaponDefinition offWeapon,
-                      Vector2 feet, float facing, int sortBase, Material material)
+                      Vector2 feet, float facing, int sortBase, Material material, float hitboxWidth = 1f)
     {
         fighter = owner;
         definition = def;
         Facing = facing;
+        this.hitboxWidth = hitboxWidth;
         float w = def.weight;
         feetMaterial = new PhysicsMaterial2D("Feet") { friction = feetFriction, bounciness = 0f };
         bodyMaterial = new PhysicsMaterial2D("Body") { friction = bodyFriction, bounciness = 0f };
@@ -146,7 +149,7 @@ public class RagdollBody : MonoBehaviour
     {
         var def = definition;
         var upper = Part("UpperLeg_" + side, def.upperLeg, hip, order, tint, upperLegMass * def.weight, PartKind.Leg, 0.8f, material);
-        var lower = Part("LowerLeg_" + side, def.lowerLeg, knee, order, tint, lowerLegMass * def.weight, PartKind.Leg, 0.8f, material);
+        var lower = Part("LowerLeg_" + side, def.lowerLeg, knee, order, tint, lowerLegMass * def.weight, PartKind.Leg, 0.8f, material, fullWidth: true);
         return new Leg
         {
             hip = Joint(upper, Torso, LegTorque, -60f, 110f),
@@ -334,7 +337,7 @@ public class RagdollBody : MonoBehaviour
     }
 
     Rigidbody2D Part(string name, Sprite sprite, Vector2 pos, int order, Color tint, float mass,
-                     PartKind kind, float damageMultiplier, Material material, bool circle = false)
+                     PartKind kind, float damageMultiplier, Material material, bool circle = false, bool fullWidth = false)
     {
         var go = new GameObject(name);
         go.transform.SetParent(transform, false);
@@ -347,18 +350,19 @@ public class RagdollBody : MonoBehaviour
         sr.color = tint;
         if (material != null) sr.sharedMaterial = material;
 
-        // Hitboxes hug the visible pixels, not the sprite's (padded) rectangle.
+        // Hitboxes hug the visible pixels, not the sprite's (padded) rectangle; the player's may be narrower.
         Rect r = PixelBounds.Opaque(sprite, 0f, 1f);
+        float width = fullWidth ? 1f : hitboxWidth;
         if (circle)
         {
             var c = go.AddComponent<CircleCollider2D>();
-            c.radius = Mathf.Max(Mathf.Min(r.width, r.height) * 0.5f - Px, Px);
+            c.radius = Mathf.Max((Mathf.Min(r.width, r.height) * 0.5f - Px) * width, Px);
             c.offset = new Vector2(r.center.x * Facing, r.center.y);
         }
         else
         {
             var box = go.AddComponent<BoxCollider2D>();
-            box.size = new Vector2(Mathf.Max(r.width - 2 * Px, Px), Mathf.Max(r.height - Px, Px));
+            box.size = new Vector2(Mathf.Max((r.width - 2 * Px) * width, Px), Mathf.Max(r.height - Px, Px));
             box.offset = new Vector2(r.center.x * Facing, r.center.y);
         }
 

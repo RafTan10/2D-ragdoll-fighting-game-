@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Moves both arms. An active hand reaches for its aim point (two-joint solver → shoulder/elbow motor targets);
-/// a released hand relaxes into guard (weapon low and pointing at the opponent, shield across the body).
+/// a released hand relaxes into guard (weapon held up in front of the chest, shield lowered at the side).
 /// </summary>
 public class ArmController : MonoBehaviour
 {
@@ -18,8 +18,10 @@ public class ArmController : MonoBehaviour
     [SerializeField] float guardSpeedShare = 0.45f;
 
     [Header("Guard poses (shoulder, elbow degrees; 0 = hanging down, + = forward)")]
-    [SerializeField] Vector2 weaponGuard = new Vector2(-10f, 22f);
-    [SerializeField] Vector2 offWeaponGuard = new Vector2(5f, 35f);
+    [Tooltip("High guard: forearm forward at chest height, blade up (shoulder + elbow + the weapon's grip ≈ 175°). " +
+             "A low guard pointed the blade at the opponent's thighs, so long weapons grazed legs all the time.")]
+    [SerializeField] Vector2 weaponGuard = new Vector2(35f, 65f);
+    [SerializeField] Vector2 offWeaponGuard = new Vector2(20f, 60f);
     [Tooltip("Shield lowered (button not held): hanging at the side, not covering the body.")]
     [SerializeField] Vector2 shieldGuard = new Vector2(6f, 18f);
 
