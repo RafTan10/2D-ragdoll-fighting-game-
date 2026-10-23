@@ -108,6 +108,8 @@ public static class ContentTools
         def.upperLeg = LoadSprite(folder, "upper_leg");
         def.lowerLeg = LoadSprite(folder, "lower_leg");
         def.cape = LoadSprite(folder, "cape"); // optional
+        def.skirt = LoadSprite(folder, "skirt"); // optional
+        def.handProp = LoadSprite(folder, "hand_prop"); // optional
 
         var db = GetDatabase();
         if (!string.IsNullOrEmpty(mainWeapon)) def.mainHand = FindWeapon(db, mainWeapon);

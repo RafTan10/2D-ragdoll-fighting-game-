@@ -106,6 +106,8 @@ public class RagdollBody : MonoBehaviour
         OffHand = MakeArm("Off", shoulder, elbow, hand, sortBase + 9, front, offWeapon, sortBase + 12, material);
 
         if (def.cape != null) MakeCape(neckPos + Vector2.down * (3 * Px), sortBase - 1, material);
+        if (def.skirt != null) MakeSkirt(hip, sortBase + 8, material);
+        if (def.handProp != null) MakeHandProp(OffHand.lower, hand, sortBase + 11, material);
 
         // A fighter never collides with itself.
         var colliders = GetComponentsInChildren<Collider2D>();
@@ -291,6 +293,44 @@ public class RagdollBody : MonoBehaviour
         // Hangs behind; may flow backwards (negative = trailing edge swings back).
         float a = -45f * Facing * MotorDrive.JointSign, b = 6f * Facing * MotorDrive.JointSign;
         joint.limits = new JointAngleLimits2D { min = Mathf.Min(a, b), max = Mathf.Max(a, b) };
+    }
+
+    /// <summary>A skirt / tunic hem: fixed to the torso at the hips, drawn over both legs. Visual only.</summary>
+    void MakeSkirt(Vector2 hip, int order, Material material)
+    {
+        var go = new GameObject("Skirt");
+        go.transform.SetParent(Torso.transform, false);
+        go.transform.position = hip; // pivot top-centre, on the centre line so turning round keeps it in place
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = definition.skirt;
+        sr.flipX = Facing < 0f;
+        sr.sortingOrder = order;
+        if (material != null) sr.sharedMaterial = material;
+    }
+
+    /// <summary>Something carried in the off hand (a bag): hangs from the grip on a free hinge and swings. Visual only.</summary>
+    void MakeHandProp(Rigidbody2D forearm, Vector2 handPos, int order, Material material)
+    {
+        var go = new GameObject("HandProp");
+        go.transform.SetParent(transform, false);
+        go.transform.position = handPos; // pivot top-centre = where it's held
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = definition.handProp;
+        sr.flipX = Facing < 0f;
+        sr.sortingOrder = order;
+        if (material != null) sr.sharedMaterial = material;
+
+        // No collider: it never blocks or hits, it only swings.
+        var rb = go.AddComponent<Rigidbody2D>();
+        rb.useAutoMass = false;
+        rb.mass = 0.2f;
+        rb.angularDamping = 1.5f;
+        rb.gravityScale = gravityScale;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+        var joint = go.AddComponent<HingeJoint2D>();
+        joint.connectedBody = forearm;
+        joint.anchor = Vector2.zero;
     }
 
     Rigidbody2D Part(string name, Sprite sprite, Vector2 pos, int order, Color tint, float mass,

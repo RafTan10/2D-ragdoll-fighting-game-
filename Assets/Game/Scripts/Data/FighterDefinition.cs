@@ -18,6 +18,10 @@ public class FighterDefinition : ScriptableObject
     public Sprite lowerLeg;
     [Tooltip("Optional. Hangs from the neck behind the body and flows with movement.")]
     public Sprite cape;
+    [Tooltip("Optional. A skirt / tunic hem fixed to the hips and drawn over both legs (pivot top-centre = the hip).")]
+    public Sprite skirt;
+    [Tooltip("Optional. Hangs from the off hand on a free hinge and swings (a bag, a lantern). Visual only, no hitbox.")]
+    public Sprite handProp;
 
     [Header("Stats")]
     public float maxHealth = 100f;

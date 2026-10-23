@@ -42,6 +42,8 @@ public class PixelArtImporter : AssetPostprocessor
         if (p.Contains("/Weapons/")) return name.Contains("shield") ? new Vector2(0.5f, 0.5f) : new Vector2(0.5f, 0f);
         if (name == "head") return new Vector2(0.5f, 0f);              // neck
         if (name == "cape") return new Vector2(0.5f, 1f);              // hangs from the neck
+        if (name == "skirt") return new Vector2(0.5f, 1f);             // hangs from the hips
+        if (name == "hand_prop") return new Vector2(0.5f, 1f);         // hangs from the hand
         if (name == "torso") return new Vector2(0.5f, 0.5f);
         if (name.Contains("arm") || name.Contains("leg")) return new Vector2(0.5f, 1f); // joint at the top
         return new Vector2(0.5f, 0.5f);

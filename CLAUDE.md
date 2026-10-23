@@ -138,6 +138,14 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       Measured (Knight vs Barbarian, Hard, 60 s): rounds ~25–30 s, ~110 hits; Barbarian (axe + mace, 120 hp) wins
       most rounds — it did before this change too, so tune fighters/AI if the Knight feels weak.
 
+- [x] New fighter **Nuha** (the user's friend; art made by them in another Claude session, front-view vector parts
+      at 500 PPU). Source pack + `convert.ps1` in `SourceArt/Nuha/` (outside Assets, so its own Ragdoll2DBuilder
+      scripts are not imported). Converted at 0.1175 game px per source PNG px: parts cropped so each joint sits on
+      the rig's edge, the hair above the neck baked behind the head, the long hair below → `cape`, the dress below the
+      hips → `skirt`, the bag → `hand_prop` on the off hand. Sword in the main hand, off hand = fist + bag.
+      Armour: head/arms skin, torso (corset) + legs leather. Stats: 100 hp, weight 0.9, walk 2.4, endurance 1.1.
+      Hard AI vs Hard AI she loses to the Knight quickly (no shield, bare head/arms) — tune if the user wants.
+
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
 - [ ] Two-handed weapons (big swords can't use a shield), weapon weight affects swing speed
@@ -178,6 +186,7 @@ Assets/Game/
   Data/              GameDatabase.asset, Fighters/, Weapons/, Arenas/, AI/
   Scenes/Arena.unity     the only game scene (everything spawns from data at runtime)
 Assets/Stickman/     earlier 3D stickman experiment — not part of the game
+SourceArt/<Name>/    original art packs + conversion scripts for fighters made outside the pixel conventions
 .claude/commands/    add-fighter.md, add-weapon.md, add-arena.md
 ```
 
@@ -189,7 +198,9 @@ Assets/Stickman/     earlier 3D stickman experiment — not part of the game
 - Fighter part sizes (px, W×H) — other sizes work, the rig adapts to the sprite size:
   `head 24×24`, `torso 24×36`, `upper_arm 10×20`, `lower_arm 10×20` (hand at the bottom),
   `upper_leg 12×24`, `lower_leg 12×24` (foot/boot at the bottom, toe pointing right),
-  optional `cape 24×44`. One arm and one leg — they're reused for both sides (the back ones are tinted darker).
+  optional `cape 24×44` (also works as long hair), optional `skirt` (hem fixed at the hips, drawn over both legs,
+  pivot top-centre = hip) and optional `hand_prop` (hangs from the off hand on a free hinge, e.g. a bag; visual only).
+  One arm and one leg — they're reused for both sides (the back ones are tinted darker).
   Leave a couple of pixels of overlap at each joint edge; the rig overlaps parts so seams hide.
 - Pivots are set by file name: head = bottom-centre (neck), torso = centre, limbs and cape = top-centre (the joint).
 - Hitboxes are fitted to the **visible pixels** at runtime (fighter/weapon textures are imported readable), so
