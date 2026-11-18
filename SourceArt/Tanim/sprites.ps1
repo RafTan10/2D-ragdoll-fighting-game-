@@ -1,15 +1,15 @@
 # Tanim: drawn pixel by pixel from his photos (side view, facing right). Run:  powershell -File SourceArt\Tanim\sprites.ps1
-# Big wavy black hair over the ears, red-tinted hexagonal sunglasses, short beard + moustache, shiny charcoal puffer
+# Big wavy black hair over the ears, red-tinted hexagonal sunglasses, short beard + moustache, black leather biker
 # jacket open over a navy T-shirt, dark jeans, white sneakers. The game's strongest fighter: a dark greatsword with a
 # red edge (and a dagger in the off hand, from the existing weapons).
 . "$PSScriptRoot\..\tools\PixelMap.ps1"
 $art = "$PSScriptRoot\..\..\Assets\Game\Art"
 $dst = "$art\Fighters\Tanim"
 
-# outline | hair | skin | beard, lip | sunglasses frame, lens, lens shine | puffer light/base/seam | T-shirt | jeans |
-# sneaker white/sole | watch
+# outline | hair | skin | beard, lip | sunglasses frame, lens, lens shine | (unused) | T-shirt | zip/snaps |
+# leather base/shadow/light/sheen | jeans | sneaker white/sole | watch
 $pal = New-Palette ("a=#1E1418  H=#1B1A21~ h=#2E2B36~ g=#4D4858  s=#B5764F S=#88573C l=#CF9670 k=#663F2D " +
-    "B=#2C201E~ m=#7E4236  F=#A7ADB8 f=#50545E r=#8A2238 L=#E35C7A  p=#7B808C P=#4D515B~ Q=#2E3038  n=#2B3350~ z=#9DA2AB " +
+    "B=#2C201E~ m=#7E4236  F=#A7ADB8 f=#50545E r=#8A2238 L=#E35C7A  p=#7B808C P=#4D515B~ Q=#2E3038  n=#2B3350~ z=#C9CDD4 K=#29252B~ V=#17151A e=#58535E E=#8E8996 " +
     "t=#2A2C36~ T=#1B1C24 y=#3E4150~  W=#ECEAE4 w=#B9B6AE  j=#D3D6DC")
 
 Save-PixelMap $pal @(
@@ -39,38 +39,50 @@ Save-PixelMap $pal @(
     "7. a S ssssss S a 7."
 ) "$dst\head.png" 24
 
-# Puffer jacket: quilt seams every 4 rows with a shiny band under each, open front over the navy T-shirt.
-$shine = "2. a ppPPPP z nnnn z pPPPPQ a 2."
-$base  = "2. a pPPPPP z nnnn z PPPPPQ a 2."
-$seam  = "2. a QQQQQQ z nnnn z QQQQQQ a 2."
+# Black leather biker jacket: wide lapels with snaps over the navy T-shirt, an off-centre zip running down and to the
+# left, a leather sheen, a belt with a silver buckle at the hem; zipped cuffs.
 $jeans = "2. a yy 7t T 6t TT a 2."
-Save-PixelMap $pal @(
+$body = @()
+for ($r = 8; $r -le 27; $r++) {
+    $row = ('.' * 24).ToCharArray()
+    $row[2] = 'a'; $row[21] = 'a'; $row[3] = 'e'; for ($x = 4; $x -le 19; $x++) { $row[$x] = 'K' }; $row[20] = 'V'
+    if (($r % 5) -eq 1 -or ($r % 5) -eq 2) { $row[5] = 'E' }          # sheen streak
+    if (($r % 7) -eq 3) { $row[17] = 'e' }                              # crease highlight
+    $zx = 14 - [Math]::Floor(($r - 8) / 4); $row[$zx] = 'z'; $row[$zx + 1] = 'V'
+    $body += -join $row
+}
+Save-PixelMap $pal (@(
     "8. a S ssss S a 8."
-    "3. a pPPP a S ssss S a PPPQ a 3."
-    "2. a pPPPP a nnnnnn a PPPPQ a 2."
-    "2. a pPPPPP z nnnn z PPPPPQ a 2."
-    $shine; $base; $base; $seam; $shine; $base; $base; $seam; $shine; $base; $base; $seam; $shine; $base
-    $base; $seam; $shine; $base; $base; $seam; $shine; $base; $base; $seam; $shine; $base; $base; $seam
+    "3. a eKKK a S ssss S a KKKV a 3."
+    "2. a eKKKK a nnnnnn a KKKKV a 2."
+    "2. a e KKK a ee nnnn ee a KKK V a 2."
+    "2. a e KK a eee nnnn eee a KK V a 2."
+    "2. a e KK a eez nnnn zee a KK V a 2."
+    "2. a e KKKK a e nnnn a KKKKK V a 2."
+    "2. a e KKKKKK a nn a z KKKKK V a 2."
+) + $body + @(
+    "2. a e VV zz 12V V a 2."
+    "2. a e VV zV 12V V a 2."
+    "2. a e 16K V a 2."
+    "2. a 18V a 2."
     $jeans; $jeans; $jeans
     "3. 18a 3."
-) "$dst\torso.png" 24
+)) "$dst\torso.png" 24
 
-# Puffy sleeves, full width.
-$sShine = "a ppPPPPPQ a"; $sBase = "a pPPPPPPQ a"; $sSeam = "a QQQQQQQQ a"
+$sBase = "1. a eKKKKV a 1."; $sShine = "1. a eEKKKV a 1."
 Save-PixelMap $pal @(
-    "1. 8a 1."
-    $sShine; $sBase; $sBase; $sSeam; $sShine; $sBase; $sBase; $sSeam; $sShine; $sBase; $sBase; $sSeam
-    $sShine; $sBase; $sBase; $sSeam; $sShine; $sBase; $sBase
+    "2. aaaaaa 2."
+    $sBase; $sShine; $sShine; $sBase; $sBase; $sBase; $sShine; $sBase; $sBase; $sBase; $sBase
+    $sShine; $sShine; $sBase; $sBase; $sBase; $sBase; $sShine; $sBase
 ) "$dst\upper_arm.png" 10
 
 Save-PixelMap $pal @(
-    $sShine; $sBase; $sBase; $sSeam; $sShine; $sBase; $sBase; $sSeam; $sShine; $sBase
-    "a QQQQQQQQ a"; "a QQQQQQQQ a"
+    $sBase; $sShine; $sShine; $sBase; $sBase; $sBase; $sShine; $sBase; $sBase; $sBase
+    "1. a VzVVVV a 1."; "1. a VzVVVV a 1."
     "1. a jjjjjj a 1."
     "1. a lsssssS a"; "1. a lssssSS a"; "1. a lsSsSsS a"; "1. a lsSsSsS a"; "1. a lssssSS a"; "1. a SssssSS a"
     "2. 7a 1."
 ) "$dst\lower_arm.png" 10
-
 $leg = "1. a yttttTTT a 1."; $legF = "1. a ytttTtTT a 1."
 Save-PixelMap $pal @(
     $leg; $leg; $legF; $leg; $leg; $leg; $legF; $leg; $leg; $leg; $legF; $leg
