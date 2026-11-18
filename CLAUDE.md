@@ -164,6 +164,12 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       `musical` → strum `GameFeel.Sound.Twang`, Karplus–Strong), **Akib** (accountant: calculator club + ledger
       shield), **Tanim** (the strongest: 125 hp, strength 1.2, greatsword 19 dmg + dagger, puffer jacket = leather).
       `HitInfo`/`BlockInfo` now carry the attacking `weapon`.
+- [x] Arenas from the user's university (BRAC University), drawn with `SourceArt/tools/PixelScene.ps1` (C# canvas:
+      rects, lines, polygons, Bayer-dithered gradients, noise) + `SourceArt/Arenas/common.ps1` (background people,
+      slat railings, tiled floor); one script per arena in `SourceArt/Arenas/`: **BRACU Atrium** (louvre screens,
+      escalators, students), **BRACU Sports Hall** (cricket: fighters duel on the red pitch mat, screen says only
+      CRICKET — no sponsor logos), **BRACU Hall** (V concrete beams, wood walls, audience at round tables, brick
+      floor). Indoor → `rain = false`. Background people stand on the far floor (y ≈ 266–292), smaller than fighters.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -206,7 +212,9 @@ Assets/Game/
   Scenes/Arena.unity     the only game scene (everything spawns from data at runtime)
 Assets/Stickman/     earlier 3D stickman experiment — not part of the game
 SourceArt/<Name>/    original art packs + conversion scripts for fighters made outside the pixel conventions
-SourceArt/tools/     PixelParts.ps1 (hi-res → pixel-part converter), PixelMap.ps1 (draw sprites from text rows)
+SourceArt/tools/     PixelParts.ps1 (hi-res → pixel-part converter), PixelMap.ps1 (draw sprites from text rows),
+                     PixelScene.ps1 (draw 640x360 arena layers)
+SourceArt/Arenas/    one script per drawn arena (+ common.ps1)
 docs/                Ragdoll_Style_Guide.md (how to make fighters from photos)
 .claude/commands/    add-fighter.md, add-weapon.md, add-arena.md, fighter-from-pics.md
 ```

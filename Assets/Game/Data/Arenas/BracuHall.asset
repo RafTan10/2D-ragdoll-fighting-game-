@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 688fc6f78a25e3b43bafdd9cbd862c3b, type: 3}
+  m_Name: BracuHall
+  m_EditorClassIdentifier: Assembly-CSharp::ArenaDefinition
+  displayName: BRACU Hall
+  sky: {fileID: 21300000, guid: 4c0013b6d7c72a7429d612709661fe80, type: 3}
+  far: {fileID: 21300000, guid: 63cc50efd3528f2438bda418b02861a4, type: 3}
+  near: {fileID: 21300000, guid: f6fae470596cf9f4c8a381cb14593f65, type: 3}
+  ground: {fileID: 21300000, guid: 7c0e7395495730e4b8e0977344dc2d11, type: 3}
+  floorPixels: 56
+  halfWidth: 4.6
+  fogColor: {r: 0.5137255, g: 0.5019608, b: 0.47843137, a: 1}
+  rain: 0

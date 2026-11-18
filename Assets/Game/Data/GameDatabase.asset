@@ -33,6 +33,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fe588785291414b43b18eb03fc3945da, type: 2}
   arenas:
   - {fileID: 11400000, guid: 8226e8828d88a154e80a558017a468e4, type: 2}
+  - {fileID: 11400000, guid: fcc61066cdac4554bb446cc6b5fe38dd, type: 2}
+  - {fileID: 11400000, guid: 5ec5c61ce0bd78e4085e8351e54f19a3, type: 2}
+  - {fileID: 11400000, guid: b28f03d49949e11419bea01b06228fca, type: 2}
   aiProfiles:
   - {fileID: 11400000, guid: ae1e38f921c9ed542824953ce04848a6, type: 2}
   - {fileID: 11400000, guid: c84c8b01944d17a418a5a0f846150803, type: 2}
