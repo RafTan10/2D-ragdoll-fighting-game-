@@ -171,6 +171,14 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       CRICKET — no sponsor logos), **BRACU Hall** (V concrete beams, wood walls, audience at round tables, brick
       floor). Indoor → `rain = false`. Background people stand on the far floor (y ≈ 266–292), smaller than fighters.
 
+- [x] Tanim's jacket changed to a black leather biker jacket (user request; armour stays Leather).
+- [x] **README.md** for GitHub visitors with `docs/media/`: `gameplay.gif` (title card + 3 captioned clips),
+      `roster.png`, `weapons.png`, arena stills. Rebuild: Play mode → start a fight → eval
+      `FrameRecorder.Begin(@"%TEMP%\stickman_cc\frames\clip1", 75, 2, 480, 270)` (renders the camera without the
+      HUD at a fixed 30 fps capture rate, saves every 2nd frame; `FrameRecorder.Busy` while running) for clip1–3, then
+      `SourceArt/tools/MakeGameplayGif.ps1` (own GIF encoder `GifWriter.ps1`: changed-box frames, 96 colours, ~7 MB)
+      and `SourceArt/tools/MakeRoster.ps1`. Keep the GIF under ~10 MB so GitHub shows it inline.
+
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
 - [ ] Two-handed weapons (big swords can't use a shield), weapon weight affects swing speed
