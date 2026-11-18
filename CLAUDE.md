@@ -180,6 +180,14 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       `SourceArt/tools/MakeGameplayGif.ps1` (own GIF encoder `GifWriter.ps1`: changed-box frames, 96 colours, ~7 MB)
       and `SourceArt/tools/MakeRoster.ps1`. Keep the GIF under ~10 MB so GitHub shows it inline.
 
+- [x] **Fighter Builder** (`Assets/Game/Editor/FighterBuilder/`, menu **Tools → Game → Fighter Builder**): a part library
+      (`FighterParts`: 6 hairstyles, 4 facial hair, 3 eyewear, 4 headwear incl. hijab, 6 tops incl. panjabi/kameez,
+      3 shoes, belt / watch / handbag) drawn with colour **roles**; `FighterBuilder` fills the roles from a
+      `FighterRecipe`'s colours (shadow/light derived), stacks the layers, writes the PNGs, creates the fighter (stats,
+      weapons, armour from the top/headwear) and saves the recipe to `Assets/Game/Data/Recipes/<Name>.json`.
+      `FighterBuilder.Assemble(recipe, scale)` renders the whole fighter as one image; `FighterBuilder.Validate()`
+      checks every template row. The window has a live preview, skin/hair swatches, Randomize, Load recipe.
+
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
 - [ ] Two-handed weapons (big swords can't use a shield), weapon weight affects swing speed
@@ -213,7 +221,8 @@ Assets/Game/
   Scripts/Combat/    HitEvents (Hit / Blocked events), HitFeedback (effects, sound, hit-stop, camera trauma)
   Scripts/Match/     MatchManager (best-of-3 rounds + IMGUI HUD/select screen), OnScreenControls, GameFeel (time scale, sounds),
                      ArenaView, CameraRig, BloodFX (blood/sparks/dust), RainFX, HitboxOverlay
-  Editor/            PixelArtImporter, ContentTools (add fighter/weapon/arena), PlaceholderArt, GameSceneBuilder
+  Editor/            PixelArtImporter, ContentTools (add fighter/weapon/arena), PlaceholderArt, GameSceneBuilder,
+                     FighterBuilder/ (FighterParts library, FighterBuilder core + FighterRecipe, FighterBuilderWindow)
   Art/Fighters/<Name>/   head.png torso.png upper_arm.png lower_arm.png upper_leg.png lower_leg.png [cape.png]
   Art/Weapons/<name>.png
   Art/Arenas/<Name>/     sky.png far.png near.png ground.png
@@ -251,6 +260,11 @@ docs/                Ragdoll_Style_Guide.md (how to make fighters from photos)
   fighters stand on — its top edge is the floor, default 56 px up). The camera zooms in, so only part is visible at once.
 
 ## Adding content (use the Claude commands, or the menu)
+
+- **Quickest new fighter: the Fighter Builder** (Tools → Game → Fighter Builder, or from code:
+  `FighterBuilder.Create(new FighterRecipe { name = "X", hair = "Short", top = "Hoodie", … })`). Option names are
+  the `name`s in `FighterParts`; new options = new layer rows there (run `FighterBuilder.Validate()` after editing).
+  Hand-draw (`SourceArt/<Name>/sprites.ps1`) only when the library can't capture the person.
 
 - No art yet? `ContentTools.CreateFighterTemplate("<Name>")` copies the Knight's PNGs into a new folder to paint over.
 - New fighter: put the 6 PNGs in `Assets/Game/Art/Fighters/<Name>/` → `/add-fighter <Name>`

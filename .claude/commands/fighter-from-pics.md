@@ -13,7 +13,13 @@ plus CLAUDE.md ("Pixel art conventions", "Adding content").
      `Assets/` (packs may contain their own Unity scripts). Check it against the guide (view, joints, sizes,
      gradients, outline thickness) and tell the user what you'll have to adapt.
 2. **Make the parts.**
-   - Drawing them yourself: write `SourceArt/<Name>/sprites.ps1` on top of `SourceArt/tools/PixelMap.ps1` — each part
+   - **First choice — the Fighter Builder.** If the library (`Assets/Game/Editor/FighterBuilder/FighterParts.cs`) can
+     capture the person, write a `FighterRecipe` (hair, facial hair, eyewear, headwear, top, shoes, belt/watch/handbag,
+     colours picked from the photos, weapons, stats), render it with `FighterBuilder.Assemble(recipe, 4)` to a PNG
+     outside Assets, look at it next to the photos, adjust, then `FighterBuilder.Create(recipe)`. If a key feature is
+     missing (a hairstyle, an outfit), consider adding it to `FighterParts` as a new option — it then works for
+     everyone — and run `FighterBuilder.Validate()`.
+   - Drawing them yourself (when the library can't capture them): write `SourceArt/<Name>/sprites.ps1` on top of `SourceArt/tools/PixelMap.ps1` — each part
      as text rows at the final size (guide section 4), e.g. `"2. a HhHHH a kS ssls w a ssS a 2."`; copy the layout of
      `SourceArt/Tahseen|Akib|Tanim/sprites.ps1` (head: neck = bottom 5 rows x7–16, face on the right; torso: neck at
      the top, outline x2/x21; hands stick out 1 px right; shoes 1 px forward). Render, build a contact sheet

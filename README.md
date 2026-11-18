@@ -70,6 +70,12 @@ Extras: `H` shows hitboxes, `B` cycles blood (off / low / normal), `F3` logs eve
 
 Every character and arena here was made from photos. The recipe is written down so anyone (or Claude) can repeat it:
 
+- **Fighter Builder** — in Unity, **Tools → Game → Fighter Builder**: pick a hairstyle, beard, glasses, hat or hijab,
+  top (T-shirt, shirt, waistcoat, leather jacket, hoodie, panjabi / kameez), shoes and colours, watch the fighter
+  update live, choose weapons and stats, and press **Create**. Recipes are saved so you can tweak a fighter later.
+
+  ![Eight fighters made with the Fighter Builder](docs/media/builder.png)
+
 - **[Ragdoll Style Guide](docs/Ragdoll_Style_Guide.md)** — what to take from a photo, part sizes and joints, the pixel-art style, and a ready-to-paste prompt.
 - `SourceArt/<Name>/sprites.ps1` — each fighter is drawn as text rows of pixels and rendered with `SourceArt/tools/PixelMap.ps1`, so a new haircut is a one-line change.
 - `SourceArt/Arenas/*.ps1` — each arena is drawn in code with `SourceArt/tools/PixelScene.ps1`.
