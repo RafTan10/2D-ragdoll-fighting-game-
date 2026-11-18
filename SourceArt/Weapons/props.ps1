@@ -3,6 +3,7 @@
 #   keyboard  — Alif's mechanical keyboard (blunt, held by its end)
 #   laptop    — Alif's laptop, lid towards the opponent (shield)
 #   dumbbell  — Ishtiaq's dumbbell, gripped on the bar; the top plates strike
+#   bamboo    — Alavi's hiking stick: long, light, a spiral pattern, hollow top
 . "$PSScriptRoot\..\tools\PixelMap.ps1"
 $dst = "$PSScriptRoot\..\..\Assets\Game\Art\Weapons"
 
@@ -54,3 +55,12 @@ Save-PixelMap $dp @(
     $plate; $plate; $plate
     "1. 14a 1."
 ) "$dst\dumbbell.png" 16
+
+# Bamboo hiking stick: brown cane with a light spiral wrap, node rings, a hollow top.
+$bp = New-Palette "a=#1E1418 w=#6E3E1E~ d=#4A2614 y=#D8B070 Q=#2A1A10"
+$cane = @()
+for ($r = 0; $r -lt 54; $r++) {
+    if ($r % 14 -eq 13) { $cane += "2. a dddd a 2."; continue }
+    switch ($r % 6) { 0 { $cane += "2. a ywwd a 2." } 1 { $cane += "2. a wywd a 2." } 2 { $cane += "2. a wwyd a 2." } default { $cane += "2. a wwwd a 2." } }
+}
+Save-PixelMap $bp (@("2. 6a 2.", "2. a dQQd a 2.") + $cane + @("2. 6a 2.")) "$dst\bamboo.png" 10

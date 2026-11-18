@@ -20,7 +20,7 @@ Every fighter is a real physics ragdoll. Every hand swings on its own. Every hit
 
 ## The roster
 
-![The roster: Knight, Barbarian, Ronin, Nuha, Tahseen, Akib, Tanim, Nawfel, Alif, Samshad, Ishtiaq, Hamza](docs/media/roster.png)
+![The roster: Knight, Barbarian, Ronin, Nuha, Tahseen, Akib, Tanim, Nawfel, Alif, Samshad, Ishtiaq, Hamza, Tamim, Alavi, Tahmeed, Nameer](docs/media/roster.png)
 
 | Fighter | Fights with | Style |
 |---|---|---|
@@ -36,6 +36,10 @@ Every fighter is a real physics ragdoll. Every hand swings on its own. Every hit
 | **Samshad** | sword + shield | the goth — long black coat with red lining; blocks everything and bashes back |
 | **Ishtiaq** | two dumbbells | the bodybuilder — tank top, 120 health, curls you into the floor |
 | **Hamza** | sword + dagger | the all-rounder — crisp white shirt, quick blade, no weak spot |
+| **Tamim** | axe + dagger | the lumberjack — checked shirt, thick glasses, heavy chops with a knife for close range |
+| **Alavi** | bamboo stick + knife | the hiker — bandana on, long reach, never runs out of breath |
+| **Tahmeed** | mace + shield | the bodyguard — grey suit, steady guard, hits like a door |
+| **Nameer** | two daggers | the duellist — maroon panjabi, quickest feet, a flurry of blades |
 
 New weapons in this update:
 

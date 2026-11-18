@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f007084aa160f4599c5b04a858c376, type: 3}
+  m_Name: Nameer
+  m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
+  displayName: Nameer
+  head: {fileID: 21300000, guid: 0f77846da4c9b274f8b87bd8d2ee59c0, type: 3}
+  torso: {fileID: 21300000, guid: 42721872bd0b382489cbb6baf07b62ef, type: 3}
+  upperArm: {fileID: 21300000, guid: fb5c6d0bf8fa55845ae43f28977d6355, type: 3}
+  lowerArm: {fileID: 21300000, guid: 1e2bb651aa41b2549a202c0b7e261122, type: 3}
+  upperLeg: {fileID: 21300000, guid: 08ea96db0383e8441a3372acd7d629a8, type: 3}
+  lowerLeg: {fileID: 21300000, guid: 9428f2133d360e343b4d2affaa85ede0, type: 3}
+  cape: {fileID: 0}
+  skirt: {fileID: 21300000, guid: 027a2aafa0b44d7459bb407f57deb1f7, type: 3}
+  handProp: {fileID: 0}
+  maxHealth: 90
+  strength: 0.95
+  walkSpeed: 2.7
+  weight: 0.9
+  endurance: 1.25
+  backLimbTint: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  headArmor: 0
+  torsoArmor: 1
+  armArmor: 1
+  legArmor: 1
+  mainHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}
+  offHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}

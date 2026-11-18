@@ -195,7 +195,12 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       dagger all-rounder). User's character notes, round 2: "Alif senior dev, Samshad goth, Ishtiaq bodybuilder, Hamza
       white shirt + no beard". Builder options added: Polo shirt, Printed shirt (print = accent colour), Tank top
       (muscular; `FighterPart.armArmor` = Skin), Gothic coat (tails = skirt), Curly, Fringe, Headphones (headwear).
-      Props in `SourceArt/Weapons/props.ps1` (keyboard, laptop, dumbbell). Roster image is 2 rows of 6.
+      Props in `SourceArt/Weapons/props.ps1` (keyboard, laptop, dumbbell). Roster image is rows of 6.
+- [x] Four more friends (round 3): **Tamim** (checked shirt, thick glasses; axe + dagger, 110 hp), **Alavi** (bandana, clear
+      glasses, open shirt over tee, boots; Bamboo stick 12 dmg + dagger, 105 hp, endurance 1.3), **Tahmeed** (grey suit; mace + shield
+      "bodyguard"), **Nameer** (maroon panjabi, stubble; two daggers, fastest). Builder options added: Checked shirt
+      (plaid in the accent colour), Open shirt over tee, Suit jacket, Bandana. 16 fighters in total. Lesson: a bare off hand
+      (no shield / second weapon) loses to the Barbarian even with buffs — give single-weapon fighters a dagger.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites

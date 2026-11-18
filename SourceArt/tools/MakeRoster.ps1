@@ -9,7 +9,8 @@ $cast = @(
     @("Knight", "sword + shield"), @("Barbarian", "axe + mace"), @("Ronin", "sword + dagger"), @("Nuha", "sword + handbag"),
     @("Tahseen", "acoustic guitar"), @("Akib", "calculator + ledger"), @("Tanim", "greatsword + dagger"),
     @("Nawfel", "hammer"), @("Alif", "keyboard + laptop"), @("Samshad", "sword + shield"), @("Ishtiaq", "two dumbbells"),
-    @("Hamza", "sword + dagger")
+    @("Hamza", "sword + dagger"), @("Tamim", "axe + dagger"), @("Alavi", "bamboo stick + knife"), @("Tahmeed", "mace + shield"),
+    @("Nameer", "two daggers")
 )
 $perRow = 6; $rowH = 200
 $k = 5; $cell = 150; $W = $cell * $perRow; $H = $rowH * [Math]::Ceiling($cast.Count / $perRow)
