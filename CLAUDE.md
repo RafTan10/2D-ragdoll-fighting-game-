@@ -24,7 +24,8 @@ only — never copy Bloody Bastards' assets.
 - Simulated mouse/keyboard (`runtime simulate_pointer`) does NOT reach gameplay while the Editor is unfocused
   (Input System background behaviour) — test brains directly (`new PlayerBrain().Think(p, e)`) instead.
 - `Time.timeScale = 0.25f; Time.fixedDeltaTime = 0.005f` + repeated `capture game_view` gives slow-motion frame sequences.
-- Git: `main` = baseline before the realism upgrade; work happens on branches (e.g. `realism-upgrade`). Commit
+- Git: GitHub `RafTan10/2D-ragdoll-fighting-game-`. `main` (the front page) was fast-forwarded to `realism-upgrade`
+  once the README landed; the pre-upgrade baseline is commit `005e8e1`. Work happens on branches (e.g. `realism-upgrade`). Commit
   before each risky step. `Library/` is ignored; if Unity reports "Database corruption detected", close Unity,
   rename `Library` (e.g. to `Library_corrupt`, ignored) and reopen — `--args -rebuildLibrary` via the CLI did not work.
 - The Editor sometimes reopens `GetStarted_Scene`; open `Assets/Game/Scenes/Arena.unity` before testing.
