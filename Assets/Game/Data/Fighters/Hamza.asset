@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f007084aa160f4599c5b04a858c376, type: 3}
+  m_Name: Hamza
+  m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
+  displayName: Hamza
+  head: {fileID: 21300000, guid: 8cfdccb752dcae04a9933b7a6ab9000e, type: 3}
+  torso: {fileID: 21300000, guid: f12337f6eb79f0148b2b6d3a56243eac, type: 3}
+  upperArm: {fileID: 21300000, guid: 59f2a75cce64fb645a33461afe7cffff, type: 3}
+  lowerArm: {fileID: 21300000, guid: 0da2b624ba8a9fb4c9504ff4afde723a, type: 3}
+  upperLeg: {fileID: 21300000, guid: aed2109e5d9bb944ea1a17f37d34c025, type: 3}
+  lowerLeg: {fileID: 21300000, guid: daa9bd6143a95554ba92bc01a88591c9, type: 3}
+  cape: {fileID: 0}
+  skirt: {fileID: 0}
+  handProp: {fileID: 0}
+  maxHealth: 100
+  strength: 1
+  walkSpeed: 2.3
+  weight: 1
+  endurance: 1.1
+  backLimbTint: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  headArmor: 0
+  torsoArmor: 1
+  armArmor: 1
+  legArmor: 1
+  mainHand: {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
+  offHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}

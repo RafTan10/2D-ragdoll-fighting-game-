@@ -125,7 +125,7 @@ public class FighterBuilderWindow : EditorWindow
         recipe.walkSpeed = EditorGUILayout.Slider("Walk speed", recipe.walkSpeed, 1.6f, 2.8f);
         recipe.endurance = EditorGUILayout.Slider("Endurance", recipe.endurance, 0.7f, 1.4f);
         EditorGUILayout.HelpBox($"Armour from the look: head {FighterBuilder.Find(FighterParts.Headwear, recipe.headwear).armor}, " +
-                                $"torso + arms {top.armor}, legs Cloth.", MessageType.None);
+                                $"torso {top.armor}, arms {top.armArmor ?? top.armor}, legs Cloth.", MessageType.None);
     }
 
     static string Choice(string label, FighterPart[] options, string current)

@@ -188,6 +188,15 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       `FighterBuilder.Assemble(recipe, scale)` renders the whole fighter as one image; `FighterBuilder.Validate()`
       checks every template row. The window has a live preview, skin/hair swatches, Randomize, Load recipe.
 
+- [x] Five more friends made with the Fighter Builder (recipes in `Assets/Game/Data/Recipes/`), each filling a role:
+      **Nawfel** (hammer tank, 120 hp, slow), **Alif** (senior developer: hoodie + headphones, Keyboard + Laptop shield,
+      95 hp, fast), **Samshad** (goth: Gothic coat, boots; sword + shield wall), **Ishtiaq** (bodybuilder: muscular tank
+      top, glasses + moustache, two Dumbbells, 120 hp, strength 1.15), **Hamza** (clean-shaven, white shirt; sword +
+      dagger all-rounder). User's character notes, round 2: "Alif senior dev, Samshad goth, Ishtiaq bodybuilder, Hamza
+      white shirt + no beard". Builder options added: Polo shirt, Printed shirt (print = accent colour), Tank top
+      (muscular; `FighterPart.armArmor` = Skin), Gothic coat (tails = skirt), Curly, Fringe, Headphones (headwear).
+      Props in `SourceArt/Weapons/props.ps1` (keyboard, laptop, dumbbell). Roster image is 2 rows of 6.
+
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
 - [ ] Two-handed weapons (big swords can't use a shield), weapon weight affects swing speed

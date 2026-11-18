@@ -11,6 +11,8 @@ public class FighterPart
     public bool tucked;
     /// <summary>Armour this option gives its region (tops: torso + arms; headwear: head).</summary>
     public ArmorMaterial armor = ArmorMaterial.Cloth;
+    /// <summary>Tops: armour for the arms when it differs from the torso (a tank top leaves them bare).</summary>
+    public ArmorMaterial? armArmor;
 }
 
 /// <summary>
@@ -117,6 +119,19 @@ public static class FighterParts
             "a HHhHHHHH 15.", "a HhHHHHHH 15.", "a HHhHHHHH 15.", "a HhHHHHHH 15.", "a HHhHHHH a 15.", "1. a HhHHH a 16.",
             "3. a HH a 17.", "4. aa 18.",
         } },
+        new FighterPart { name = "Curly", head = new[]
+        {
+            "6. aa . aa . aa . aa 7.", "5. a gH a Hg a gH a Hg a 6.", "4. a hgHhgHhgHhgHhgH a 3.", "3. a HgHhgHHgHhgHHgHh a 3.",
+            "2. a hHgHHhgHHgHhHgHgHh a 2.", "2. a HgHhgHHgHhgHHgHhgH a 2.", "2. a hHgHHhgHHgHhHgHgHh a 2.", "2. a HgHhgHHgHhgHHgH 6.",
+            "2. a hHgHHhgHHgH 10.", "2. a HgHhgHH 14.", "2. a hHgH 17.", "2. a HgH 18.", "2. a hH 19.",
+        } },
+        new FighterPart { name = "Fringe", head = new[]
+        {
+            "24.", "7. 9a 8.", "5. aa hHHgHHHhH aa 6.", "3. a hHHHgHHHHHhHHH a 5.", "2. a hHHHHgHHHHHHhHHHH a 3.",
+            "2. a HhHHHHHgHHHHHHhHH a 3.", "2. a HHhHHHHHHgHHHHHhHH a 2.", "2. a HhHHHHHHHgHHHHhHHH a 2.",
+            "2. a HHhHHHHHH . H . H . H . H 4.", "2. a HhHHHHHH 13.", "2. a HHhHHHHH 13.", "2. a HhHHHHHH 13.",
+            "2. a HHhHHHH 14.", "2. a HhHHHH 15.", "2. a HHhH 17.",
+        } },
         new FighterPart { name = "Long", head = new[]
         {
             "24.", "8. 7a 9.", "6. aa hHgHHhHH aa 6.", "4. aa hHHHgHHHhHH aa 5.", "3. a hHHHHHgHHHHHHHHh a 3.",
@@ -165,6 +180,12 @@ public static class FighterParts
             "24_", "7_ 8a 9_", "5_ aa Y 6p P aa 7_", "4_ a Y 9p P a 7_", "3_ a Y 11p P a 6_", "2_ a Y 12p P a 6_",
             "2. a 14P 5p a 1.", "16. 6a 2.",
         } },
+        new FighterPart { name = "Headphones", armor = ArmorMaterial.Skin, head = new[]
+        {
+            "", "8. a zz a 12.", "8. a Pz a 12.", "8. a Pz a 12.", "8. a Pz a 12.", "8. a Pz a 12.", "8. a Pz a 12.",
+            "8. a Pz a 12.", "6. 6a 12.", "5. a Y pppp P a 11.", "5. a Y pppp P a 11.", "5. a Y pppp P a 11.",
+            "5. a Y pppp P a 11.", "6. 6a 12.",
+        } },
         new FighterPart { name = "Hijab", armor = ArmorMaterial.Cloth, head = new[]
         {
             "24_", "7_ 8a 9_", "5_ aa pppPpppp aa 7_", "4_ a 13p a 5_", "3_ a 15p a 4_", "2_ a 17p a 3_", "2_ a 16p P a 3_",
@@ -190,6 +211,13 @@ public static class FighterParts
     static readonly string Vest = "2. a x 7c C c 7c C a 2.", VestButton = "2. a x 7c C n 7c C a 2.",
                            VestPocket = "2. a x c 5C c C c c 5C c C a 2.";
     static readonly string Tee = "2. a xx 14c CC a 2.", TeeFold = "2. a xx 5c C 8c CC a 2.";
+    static readonly string PoloRib = "2. a xx ccCcccCcccCccc CC a 2.";
+    // Gothic coat: silver buttons (m) down both sides of a centre seam; tails with a red-lined (n) opening.
+    static readonly string GothButtons = "2. a xcccc m cccCcc m ccccC a 2.", GothPlain = "2. a xcccc c cccCcc c ccccC a 2.";
+    static readonly string GothTail = "2. a xccccccc n ccccccccC a 2.", GothTailFold = "2. a xccCcccc n cccCccccC a 2.";
+    // Bold print in the accent colour (n): x3 light edge, x4–11, placket C at x12, x13–19, shadow C at x20.
+    static readonly string Print1 = "2. a x nnccccnn C ccnnncc C a 2.", Print2 = "2. a x cnnnccnc C cnncccn C a 2.",
+                           Print3 = "2. a x ccnccnnn C nncccnn C a 2.", Print4 = "2. a x nccnnncc C cccnnnc C a 2.";
     static readonly string Sleeve = "1. a xccccC a 1.", SleeveFold = "1. a xcCccC a 1.";
     static readonly string Arm = "1. a lsssSS a 1.";
 
@@ -206,6 +234,76 @@ public static class FighterParts
             }),
             upperArm = new[] { "2. 6a 2.", Sleeve, Sleeve, SleeveFold, Sleeve, Sleeve, Sleeve, Sleeve, Sleeve, "1. a CCCCCC a 1.",
                                Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm },
+            lowerArm = new[] { Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm },
+        },
+        new FighterPart
+        {
+            name = "Tank top (muscular)", showsWrist = true, tucked = false, armArmor = ArmorMaterial.Skin,
+            torso = Fill(36, new[]
+            {
+                "8. a S 4s S a 8.", "3. a llss c S 4s S c ssSS a 3.", "2. a llsss c S 4s S c sssSS a 2.",
+                "2. a lssss xc C ss C cx ssssS a 2.", "2. a ls xcccc cccc cccc ssS a 2.",
+                "2. a s x 14c C s a 2.", "2. a s x 14c C s a 2.", "2. a s x 14c C s a 2.", "2. a s x 14c C s a 2.",
+                "2. a xx c 5C cc 5C c CC a 2.",
+                Tee, Tee, "2. a xx 5c C 2c C 5c CC a 2.", Tee, "2. a xx 5c C 2c C 5c CC a 2.", Tee,
+                "2. a xx 5c C 2c C 5c CC a 2.", Tee, Tee, Tee, TeeFold, Tee, Tee, Tee, Tee, Tee, Tee, "2. a xx 14C CC a 2.",
+            }),
+            upperArm = new[] { "2. aaaaaa 2.", "1. a llssSS a 1.", "1. a llssSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1.",
+                               "1. a lsssSS a 1.", "a llsssSSS a", "a llssssSS a", "a llssssSS a", "a llssssSS a",
+                               "a llssssSS a", "a llssssSS a", "a lsssssSS a", "1. a lssSSS a 1.", "1. a lsssSS a 1.",
+                               "1. a lsssSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1." },
+            lowerArm = new[] { "1. a llssSS a 1.", "1. a lsssSS a 1.", "1. a lssksS a 1.", "1. a lsssSS a 1.", "1. a llssSS a 1.",
+                               "1. a lsssSS a 1.", "1. a lsksSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1.",
+                               "1. a lsssSS a 1.", "1. a lsssSS a 1.", "1. a lsssSS a 1." },
+        },
+        new FighterPart
+        {
+            name = "Gothic coat", showsWrist = false, tucked = false,
+            torso = Fill(36, new[]
+            {
+                "7. a x S 4s S C a 7.", "3. a xccc x S ssss S C cccC a 3.", "2. a xcccc x n iiii n C ccccC a 2.",
+                "2. a xcccc c n iiii n c ccccC a 2.", "2. a xcccc m c n ii n c m ccccC a 2.", "2. a xcccccc n ii n ccccccC a 2.",
+                "2. a xcccc m c n ii n c m ccccC a 2.", "2. a xcccccc n ii n ccccccC a 2.", "2. a xcccc m cc nn cc m ccccC a 2.",
+                GothButtons, GothPlain, GothPlain, GothPlain, GothButtons, GothPlain, GothPlain, GothPlain, GothButtons,
+                GothPlain, GothPlain, GothPlain, GothButtons, GothPlain, GothPlain, GothPlain, GothPlain, GothPlain,
+                GothPlain, GothPlain, GothPlain, GothPlain, GothPlain, GothPlain, GothPlain, GothPlain, GothPlain,
+            }),
+            upperArm = Repeat20("2. aaaaaa 2.", Sleeve, SleeveFold),
+            lowerArm = new[] { Sleeve, Sleeve, SleeveFold, Sleeve, Sleeve, Sleeve, Sleeve, SleeveFold, Sleeve, Sleeve,
+                               "a xccccccC a", "a nnnnnnnn a", "1. a CCCCCC a 1." },
+            skirt = new[] { GothTail, GothTail, GothTailFold, GothTail, GothTail, GothTail, GothTailFold, GothTail, GothTail,
+                            GothTail, GothTailFold, GothTail, GothTail, GothTail, GothTailFold, GothTail, GothTail, GothTail,
+                            "2. a 18C a 2.", "3. 18a 3." },
+        },
+        new FighterPart
+        {
+            name = "Polo shirt", showsWrist = true, tucked = false,
+            torso = Fill(36, new[]
+            {
+                "8. a S 4s S a 8.", "4. aaaa x C 4s C x aaaa 4.", "3. a xccc xx S ss S xx cccC a 3.",
+                "2. a xxcc cxx C ss C xxc ccCC a 2.", "2. a xxccc cc C ss C cc cccCC a 2.",
+                "2. a xxccc ccc C n C ccc ccCC a 2.", "2. a xxccc ccc C c C ccc ccCC a 2.", "2. a xxccc ccc C n C ccc ccCC a 2.",
+                Tee, PoloRib, Tee, PoloRib, Tee, PoloRib, Tee, PoloRib, Tee, PoloRib, Tee, PoloRib, Tee, PoloRib, Tee, PoloRib,
+                Tee, PoloRib, Tee, "2. a xx 14C CC a 2.",
+            }),
+            upperArm = new[] { "2. 6a 2.", Sleeve, Sleeve, SleeveFold, Sleeve, Sleeve, Sleeve, Sleeve, "1. a CCCCCC a 1.",
+                               Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm },
+            lowerArm = new[] { Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm },
+        },
+        new FighterPart
+        {
+            name = "Printed shirt", showsWrist = true, tucked = false,
+            torso = Fill(36, new[]
+            {
+                "8. a S 4s S a 8.", "4. aaaa x C 4s C x aaaa 4.", "3. a xccn xx S ss S xx ncnC a 3.",
+                "2. a xnccc xx S ss S xx cnccC a 2.",
+                Print1, Print2, Print3, Print4, Print1, Print2, Print3, Print4, Print1, Print2, Print3, Print4,
+                Print1, Print2, Print3, Print4, Print1, Print2, Print3, Print4, Print1, Print2, Print3,
+                "2. a xx 14C CC a 2.",
+            }),
+            upperArm = new[] { "2. 6a 2.", "1. a xnccnC a 1.", "1. a xcnncC a 1.", "1. a xccnnC a 1.", "1. a xnccnC a 1.",
+                               "1. a xcnncC a 1.", "1. a xccnnC a 1.", "1. a xnccnC a 1.", "1. a CCCCCC a 1.",
+                               Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm },
             lowerArm = new[] { Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm, Arm },
         },
         new FighterPart

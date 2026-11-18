@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f007084aa160f4599c5b04a858c376, type: 3}
+  m_Name: Samshad
+  m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
+  displayName: Samshad
+  head: {fileID: 21300000, guid: c7ed2b8b52537d940bcb6fbaf9081f68, type: 3}
+  torso: {fileID: 21300000, guid: 8d613a7b40550db439c4ae5fda8f1804, type: 3}
+  upperArm: {fileID: 21300000, guid: f1771daadaa987b40ad8e80a6c1e9ac0, type: 3}
+  lowerArm: {fileID: 21300000, guid: d01014db00e74c44783c6c627042f4ad, type: 3}
+  upperLeg: {fileID: 21300000, guid: 735ab39f24d28394c98c449c24d5bae5, type: 3}
+  lowerLeg: {fileID: 21300000, guid: f9f0ae23eaeb9f74e95b62c82cbb8ea2, type: 3}
+  cape: {fileID: 0}
+  skirt: {fileID: 21300000, guid: d77e29bd7cead4f4fb7075763f14e49e, type: 3}
+  handProp: {fileID: 0}
+  maxHealth: 105
+  strength: 1
+  walkSpeed: 2.2
+  weight: 1
+  endurance: 1.05
+  backLimbTint: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  headArmor: 0
+  torsoArmor: 1
+  armArmor: 1
+  legArmor: 1
+  mainHand: {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
+  offHand: {fileID: 11400000, guid: 1aae5549e21ca4d41a8de13d4866e954, type: 2}

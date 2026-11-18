@@ -7,9 +7,12 @@ New-Item -ItemType Directory -Force $Out | Out-Null
 
 $cast = @(
     @("Knight", "sword + shield"), @("Barbarian", "axe + mace"), @("Ronin", "sword + dagger"), @("Nuha", "sword + handbag"),
-    @("Tahseen", "acoustic guitar"), @("Akib", "calculator + ledger"), @("Tanim", "greatsword + dagger")
+    @("Tahseen", "acoustic guitar"), @("Akib", "calculator + ledger"), @("Tanim", "greatsword + dagger"),
+    @("Nawfel", "hammer"), @("Alif", "keyboard + laptop"), @("Samshad", "sword + shield"), @("Ishtiaq", "two dumbbells"),
+    @("Hamza", "sword + dagger")
 )
-$k = 5; $cell = 150; $W = $cell * $cast.Count; $H = 200
+$perRow = 6; $rowH = 200
+$k = 5; $cell = 150; $W = $cell * $perRow; $H = $rowH * [Math]::Ceiling($cast.Count / $perRow)
 $bmp = New-Object System.Drawing.Bitmap $W, $H
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.Clear([System.Drawing.Color]::FromArgb(255, 74, 70, 84))
@@ -19,14 +22,15 @@ $name = New-Object System.Drawing.Font("Consolas", 16, [System.Drawing.FontStyle
 $sub = New-Object System.Drawing.Font("Consolas", 11, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
 $gold = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 232, 186, 74))
 $grey = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 190, 186, 180))
-$x = 0
+$i = 0
 foreach ($c in $cast) {
+    $x = ($i % $perRow) * $cell; $y = [Math]::Floor($i / $perRow) * $rowH
     $head = [System.Drawing.Bitmap]::FromFile("$art\Fighters\$($c[0])\head.png")
     $w = $head.Width * $k; $h = $head.Height * $k
-    $g.DrawImage($head, $x + ($cell - $w) / 2, 140 - $h, $w, $h); $head.Dispose()
-    $s = $g.MeasureString($c[0], $name); $g.DrawString($c[0], $name, $gold, $x + ($cell - $s.Width) / 2, 150)
-    $s = $g.MeasureString($c[1], $sub); $g.DrawString($c[1], $sub, $grey, $x + ($cell - $s.Width) / 2, 172)
-    $x += $cell
+    $g.DrawImage($head, $x + ($cell - $w) / 2, $y + 140 - $h, $w, $h); $head.Dispose()
+    $s = $g.MeasureString($c[0], $name); $g.DrawString($c[0], $name, $gold, $x + ($cell - $s.Width) / 2, $y + 150)
+    $s = $g.MeasureString($c[1], $sub); $g.DrawString($c[1], $sub, $grey, $x + ($cell - $s.Width) / 2, $y + 172)
+    $i++
 }
 $g.Dispose(); $bmp.Save("$Out\roster.png"); $bmp.Dispose()
 

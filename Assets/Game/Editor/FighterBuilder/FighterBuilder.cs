@@ -294,7 +294,7 @@ public static class FighterBuilder
         var top = Find(FighterParts.Tops, r.top);
         def.headArmor = Find(FighterParts.Headwear, r.headwear).armor;
         def.torsoArmor = top.armor;
-        def.armArmor = top.armor;
+        def.armArmor = top.armArmor ?? top.armor;
         def.legArmor = ArmorMaterial.Cloth;
         EditorUtility.SetDirty(def);
         AssetDatabase.SaveAssets();
