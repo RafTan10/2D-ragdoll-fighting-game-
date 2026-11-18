@@ -42,11 +42,11 @@ public static class GameFeel
 
     // ================================================================ sound
 
-    /// <summary>Flesh hit, armour/metal hit, shield block, fast swing, body hitting the ground.</summary>
-    public enum Sound { Flesh, Metal, Wood, Whoosh, Thud }
+    /// <summary>Flesh hit, armour/metal hit, shield block, fast swing, body hitting the ground, a musical weapon's strum.</summary>
+    public enum Sound { Flesh, Metal, Wood, Whoosh, Thud, Twang }
 
     static AudioSource source;
-    static AudioClip flesh, metal, wood, whoosh, thud;
+    static AudioClip flesh, metal, wood, whoosh, thud, twang;
 
     public static void Play(Sound sound, float volume)
     {
@@ -60,7 +60,7 @@ public static class GameFeel
             BuildClips();
         }
         var clip = sound == Sound.Flesh ? flesh : sound == Sound.Metal ? metal : sound == Sound.Wood ? wood
-                 : sound == Sound.Thud ? thud : whoosh;
+                 : sound == Sound.Thud ? thud : sound == Sound.Twang ? twang : whoosh;
         source.pitch = Random.Range(0.88f, 1.12f);
         source.PlayOneShot(clip, Mathf.Clamp01(volume));
     }
@@ -99,6 +99,34 @@ public static class GameFeel
             lp += (Noise() - lp) * 0.08f; // low-passed noise
             return lp * Mathf.Sin(Mathf.PI * t / 0.3f) * 1.6f;
         });
+
+        // A quick strum: three plucked strings (G, B, E), 12 ms apart.
+        int strumLength = Mathf.CeilToInt(rate * 0.7f);
+        var strum = new float[strumLength];
+        float[] notes = { 196f, 246.9f, 329.6f };
+        for (int s = 0; s < notes.Length; s++)
+        {
+            var pluck = Pluck(notes[s], rate, strumLength, rng);
+            int delay = Mathf.RoundToInt(rate * 0.012f * s);
+            for (int i = delay; i < strumLength; i++) strum[i] += pluck[i - delay] * 0.45f;
+        }
+        twang = Make("Twang", rate, 0.7f, (t, i) => strum[i]);
+    }
+
+    /// <summary>Karplus–Strong plucked string: a burst of noise fed through a short, slowly decaying delay line.</summary>
+    static float[] Pluck(float frequency, int rate, int length, System.Random rng)
+    {
+        int period = Mathf.Max(2, Mathf.RoundToInt(rate / frequency));
+        var line = new float[period];
+        for (int i = 0; i < period; i++) line[i] = (float)(rng.NextDouble() * 2.0 - 1.0);
+        var output = new float[length];
+        for (int i = 0; i < length; i++)
+        {
+            int at = i % period, next = (i + 1) % period;
+            output[i] = line[at];
+            line[at] = (line[at] + line[next]) * 0.5f * 0.996f;
+        }
+        return output;
     }
 
     static AudioClip Make(string name, int rate, float seconds, System.Func<float, int, float> sample)

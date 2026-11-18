@@ -8,6 +8,8 @@ public struct HitInfo
 {
     public Fighter attacker, victim;
     public BodyPart part;
+    /// <summary>What it was hit with (null for fists).</summary>
+    public WeaponDefinition weapon;
     /// <summary>Damage after armour and body-part multipliers.</summary>
     public float damage;
     /// <summary>Collision impulse (N·s): speed × mass, the "how hard" of the hit.</summary>
@@ -38,6 +40,8 @@ public struct BlockInfo
     public Vector2 point;
     public float impact;
     public bool shield;
+    /// <summary>The attacking weapon (null for fists).</summary>
+    public WeaponDefinition weapon;
 }
 
 /// <summary>A shield was driven into the opponent's body: a shove, no damage.</summary>

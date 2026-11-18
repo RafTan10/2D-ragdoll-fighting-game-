@@ -13,8 +13,11 @@ plus CLAUDE.md ("Pixel art conventions", "Adding content").
      `Assets/` (packs may contain their own Unity scripts). Check it against the guide (view, joints, sizes,
      gradients, outline thickness) and tell the user what you'll have to adapt.
 2. **Make the parts.**
-   - Drawing them yourself: write a small script in `SourceArt/<Name>/` that draws each part as pixels at the final
-     sizes (guide section 4), or at 10× and converts. Keep the script, so the art can be regenerated.
+   - Drawing them yourself: write `SourceArt/<Name>/sprites.ps1` on top of `SourceArt/tools/PixelMap.ps1` — each part
+     as text rows at the final size (guide section 4), e.g. `"2. a HhHHH a kS ssls w a ssS a 2."`; copy the layout of
+     `SourceArt/Tahseen|Akib|Tanim/sprites.ps1` (head: neck = bottom 5 rows x7–16, face on the right; torso: neck at
+     the top, outline x2/x21; hands stick out 1 px right; shoes 1 px forward). Render, build a contact sheet
+     (`Save-ContactSheet`), look at it, fix, and check the parts in the arena. Keep the script.
    - Converting a pack: copy the pack into `SourceArt/<Name>/` and write `SourceArt/<Name>/convert.ps1` on top of
      `SourceArt/tools/PixelParts.ps1` (see `SourceArt/Nuha/convert.ps1`): crop every part so its joint sits on the
      edge the rig expects, map long hair → `cape`, anything below the hips → `skirt`, a carried item → `hand_prop`,

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f007084aa160f4599c5b04a858c376, type: 3}
+  m_Name: Tahseen
+  m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
+  displayName: Tahseen
+  head: {fileID: 21300000, guid: 9053f268fde855a47924bc772da79e9c, type: 3}
+  torso: {fileID: 21300000, guid: f384462f4f69fe6488f5715ab765abd6, type: 3}
+  upperArm: {fileID: 21300000, guid: 20989c993046bc34cb59667336c1b3bb, type: 3}
+  lowerArm: {fileID: 21300000, guid: 6bc81df76e86fbf4b82d34440d0c081c, type: 3}
+  upperLeg: {fileID: 21300000, guid: 1cea8bb62455ec4498d3fb12eef62fd7, type: 3}
+  lowerLeg: {fileID: 21300000, guid: fc2df739999ee9349a16022935eaa57d, type: 3}
+  cape: {fileID: 0}
+  skirt: {fileID: 0}
+  handProp: {fileID: 0}
+  maxHealth: 100
+  strength: 1
+  walkSpeed: 2.4
+  weight: 0.95
+  endurance: 1.1
+  backLimbTint: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  headArmor: 0
+  torsoArmor: 1
+  armArmor: 1
+  legArmor: 1
+  mainHand: {fileID: 11400000, guid: d8ea39eba6313b64d9b47b4f5ca05d12, type: 2}
+  offHand: {fileID: 0}

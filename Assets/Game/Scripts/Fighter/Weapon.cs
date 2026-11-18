@@ -160,7 +160,7 @@ public class Weapon : MonoBehaviour
             StatBlocked++;
             float cost = impact * (otherWeapon.IsShield ? 1.2f : 0.8f);
             otherWeapon.owner.SpendStamina(cost);
-            HitEvents.RaiseBlocked(new BlockInfo { attacker = owner, blocker = otherWeapon.owner, point = point, impact = impact, shield = otherWeapon.IsShield });
+            HitEvents.RaiseBlocked(new BlockInfo { attacker = owner, blocker = otherWeapon.owner, point = point, impact = impact, shield = otherWeapon.IsShield, weapon = definition });
             return;
         }
 
@@ -213,7 +213,7 @@ public class Weapon : MonoBehaviour
 
         HitEvents.RaiseHit(new HitInfo
         {
-            attacker = owner, victim = part.fighter, part = part, damage = damage, impact = impact,
+            attacker = owner, victim = part.fighter, part = part, weapon = definition, damage = damage, impact = impact,
             point = point, direction = dir, strength = strength, armoured = armoured, armorWear = armorWear
         });
         part.fighter.TakeDamage(damage, part);

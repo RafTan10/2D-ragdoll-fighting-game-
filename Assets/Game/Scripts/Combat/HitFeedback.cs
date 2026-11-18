@@ -78,6 +78,8 @@ public class HitFeedback : MonoBehaviour
             GameFeel.Play(GameFeel.Sound.Flesh, 0.3f + 0.6f * scale);
         }
 
+        if (hit.weapon != null && hit.weapon.musical) GameFeel.Play(GameFeel.Sound.Twang, 0.5f + 0.4f * scale);
+
         if (hit.strength == HitStrength.Heavy) GameFeel.HitStop(heavyHitStop);
         else if (hit.strength == HitStrength.Medium) GameFeel.HitStop(mediumHitStop);
 
@@ -93,6 +95,7 @@ public class HitFeedback : MonoBehaviour
         BloodFX.Sparks(block.point, 10);
         ImpactFX.Hit(block.point, Vector2.up, 0.6f, new Color(1f, 0.92f, 0.6f, 0.9f));
         GameFeel.Play(block.shield ? GameFeel.Sound.Wood : GameFeel.Sound.Metal, Mathf.Clamp01(0.3f + block.impact * 0.05f));
+        if (block.weapon != null && block.weapon.musical) GameFeel.Play(GameFeel.Sound.Twang, 0.5f);
         if (CameraRig.Current != null) CameraRig.Current.AddTrauma(blockTrauma);
     }
 }

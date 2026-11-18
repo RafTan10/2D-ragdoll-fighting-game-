@@ -17,6 +17,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: efcf27f7bdded184cbbaf37959cc892b, type: 2}
   - {fileID: 11400000, guid: 6208edb196414ee40bcb83012946c999, type: 2}
   - {fileID: 11400000, guid: 896a9fa894b2b53459a996226b646284, type: 2}
+  - {fileID: 11400000, guid: 2fb27168fe4085d44a552b51ad93ddea, type: 2}
+  - {fileID: 11400000, guid: e04966b1960770b489fd0cfa1fef78a5, type: 2}
+  - {fileID: 11400000, guid: ab44087c34a35a84f97107be16fc4d58, type: 2}
   weapons:
   - {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}
   - {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
@@ -24,6 +27,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a377886c5ad5ee347869a178427c822e, type: 2}
   - {fileID: 11400000, guid: cc9217d9889c0b04295a61411d7e8cde, type: 2}
   - {fileID: 11400000, guid: 1aae5549e21ca4d41a8de13d4866e954, type: 2}
+  - {fileID: 11400000, guid: d8ea39eba6313b64d9b47b4f5ca05d12, type: 2}
+  - {fileID: 11400000, guid: ac0d223ea108a934b99d6c67b5d9ca7d, type: 2}
+  - {fileID: 11400000, guid: 23de5d13423ae884cbbd3f1dccf74faa, type: 2}
+  - {fileID: 11400000, guid: fe588785291414b43b18eb03fc3945da, type: 2}
   arenas:
   - {fileID: 11400000, guid: 8226e8828d88a154e80a558017a468e4, type: 2}
   aiProfiles:

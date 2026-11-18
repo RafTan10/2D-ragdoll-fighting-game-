@@ -17,6 +17,8 @@ public class WeaponDefinition : ScriptableObject
     [Tooltip("Hits slower than this (m/s) do nothing.")]
     public float minImpactSpeed = 2.5f;
     public bool twoHanded = false;
+    [Tooltip("Strums (GameFeel.Sound.Twang) on top of the normal sound when it hits or is blocked — a guitar.")]
+    public bool musical = false;
 
     [Header("Holding")]
     [Tooltip("Angle of the weapon relative to the forearm (0 = continues the forearm, 90 = points forward).")]

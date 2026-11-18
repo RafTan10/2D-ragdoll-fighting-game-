@@ -159,6 +159,12 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       Barbarian Easy 2 wins + 2 ahead of 4, Normal 1 of 4 (still her hardest match-up), Hard lost. Rounds now often
       run past 60 s on Easy/Normal.
 
+- [x] Fighters drawn from the user's photos (`SourceArt/<Name>/sprites.ps1`, rendered with `SourceArt/tools/PixelMap.ps1`:
+      run-length text rows → PNG, case-sensitive palette, `~` = texture noise): **Tahseen** (guitar = Mace-type,
+      `musical` → strum `GameFeel.Sound.Twang`, Karplus–Strong), **Akib** (accountant: calculator club + ledger
+      shield), **Tanim** (the strongest: 125 hp, strength 1.2, greatsword 19 dmg + dagger, puffer jacket = leather).
+      `HitInfo`/`BlockInfo` now carry the attacking `weapon`.
+
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
 - [ ] Two-handed weapons (big swords can't use a shield), weapon weight affects swing speed
@@ -200,7 +206,7 @@ Assets/Game/
   Scenes/Arena.unity     the only game scene (everything spawns from data at runtime)
 Assets/Stickman/     earlier 3D stickman experiment — not part of the game
 SourceArt/<Name>/    original art packs + conversion scripts for fighters made outside the pixel conventions
-SourceArt/tools/     PixelParts.ps1 (shared hi-res → pixel-part converter)
+SourceArt/tools/     PixelParts.ps1 (hi-res → pixel-part converter), PixelMap.ps1 (draw sprites from text rows)
 docs/                Ragdoll_Style_Guide.md (how to make fighters from photos)
 .claude/commands/    add-fighter.md, add-weapon.md, add-arena.md, fighter-from-pics.md
 ```

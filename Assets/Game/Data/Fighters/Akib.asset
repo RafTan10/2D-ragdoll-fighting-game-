@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f007084aa160f4599c5b04a858c376, type: 3}
+  m_Name: Akib
+  m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
+  displayName: Akib
+  head: {fileID: 21300000, guid: 5e9e9d79fe22e9a4abec953637e9f9d3, type: 3}
+  torso: {fileID: 21300000, guid: 202c1cd5a243b294fa8d439c31fa8ff7, type: 3}
+  upperArm: {fileID: 21300000, guid: 17b28e78b74aba84e87e83962103336b, type: 3}
+  lowerArm: {fileID: 21300000, guid: 06f8216c1cf05ca4bbf58191b434bdd6, type: 3}
+  upperLeg: {fileID: 21300000, guid: 6291c568b9a6fc04ebabc09774f8f789, type: 3}
+  lowerLeg: {fileID: 21300000, guid: 2fb71d9f246f2f1439e5801d19476d1f, type: 3}
+  cape: {fileID: 0}
+  skirt: {fileID: 0}
+  handProp: {fileID: 0}
+  maxHealth: 100
+  strength: 0.95
+  walkSpeed: 2.3
+  weight: 0.95
+  endurance: 1.15
+  backLimbTint: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  headArmor: 1
+  torsoArmor: 1
+  armArmor: 1
+  legArmor: 1
+  mainHand: {fileID: 11400000, guid: ac0d223ea108a934b99d6c67b5d9ca7d, type: 2}
+  offHand: {fileID: 11400000, guid: 23de5d13423ae884cbbd3f1dccf74faa, type: 2}
