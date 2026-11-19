@@ -33,6 +33,8 @@ public class Fighter : MonoBehaviour
         public float upperLength, lowerLength;
         public float Reach => upperLength + lowerLength;
         public Vector2 ShoulderPosition => upper.position;
+        /// <summary>Where the fist actually is right now (end of the forearm).</summary>
+        public Vector2 HandPosition => (Vector2)lower.position + (Vector2)(lower.transform.rotation * Vector2.down) * lowerLength;
         public MotorDrive shoulder, elbow;
         public bool IsShield => weapon != null && weapon.IsShield;
     }

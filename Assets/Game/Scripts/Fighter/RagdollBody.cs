@@ -236,10 +236,53 @@ public class RagdollBody : MonoBehaviour
         rb.sleepMode = RigidbodySleepMode2D.StartAwake;
         Bodies.Add(rb);
 
-        var fixedJoint = go.AddComponent<FixedJoint2D>();
-        fixedJoint.connectedBody = hand;
-        fixedJoint.frequency = 0f;
+        if (def.IsShield)
+        {
+            var fixedJoint = go.AddComponent<FixedJoint2D>();
+            fixedJoint.connectedBody = hand;
+            fixedJoint.frequency = 0f;
+        }
+        else weapon.wrist = MakeWrist(rb, hand, def);
         return weapon;
+    }
+
+    [Header("Wrist")]
+    [Tooltip("Torque the wrist may use to snap a weapon between guard and strike grip (× fighter strength).")]
+    [SerializeField] float wristTorque = 45f;
+
+    /// <summary>
+    /// A motorised hinge at the grip. Built with the weapon at its guard angle, so joint angle 0 = guard; the limits
+    /// allow it to straighten to <see cref="Weapon.StrikeGrip"/> (plus a little slack) and no further.
+    /// </summary>
+    MotorDrive MakeWrist(Rigidbody2D weapon, Rigidbody2D forearm, WeaponDefinition def)
+    {
+        var joint = weapon.gameObject.AddComponent<HingeJoint2D>();
+        joint.connectedBody = forearm;
+        joint.anchor = new Vector2(0f, def.gripPixels * Px); // the grip (weapon pivot is the bottom of the sprite)
+        joint.useLimits = true;
+        float straighten = Weapon.StrikeGrip - def.gripAngle;     // negative: rotates the blade towards the arm line
+        float a = (straighten - 4f) * Facing * MotorDrive.JointSign, b = 4f * Facing * MotorDrive.JointSign;
+        joint.limits = new JointAngleLimits2D { min = Mathf.Min(a, b), max = Mathf.Max(a, b) };
+        var drive = new MotorDrive { joint = joint, body = weapon, parent = forearm, maxTorque = wristTorque * definition.strength };
+        drives.Add(drive);
+        return drive;
+    }
+
+    /// <summary>After mirroring: put the weapon back at its guard angle for the new facing and rebuild the wrist.</summary>
+    void RebuildWrist(Weapon weapon)
+    {
+        var old = weapon.wrist;
+        var rb = old.body; var forearm = old.parent;
+        float gripPx = weapon.definition.gripPixels * Px;
+        Vector2 grip = rb.transform.TransformPoint(new Vector3(0f, gripPx, 0f));
+        float rotation = forearm.rotation + 180f + weapon.definition.gripAngle * Facing;
+        Vector2 up = Quaternion.Euler(0f, 0f, rotation) * Vector2.up;
+        rb.rotation = rotation;
+        rb.position = grip - up * gripPx;
+        rb.transform.SetPositionAndRotation(rb.position, Quaternion.Euler(0f, 0f, rotation));
+        drives.Remove(old);
+        DestroyImmediate(old.joint);
+        weapon.wrist = MakeWrist(rb, forearm, weapon.definition);
     }
 
     [Header("Weapon trails")]
@@ -486,7 +529,11 @@ public class RagdollBody : MonoBehaviour
             }
         }
 
-        // A weapon's grip angle is baked into its fixed joint, so rebuild that joint at the mirrored angle.
+        // A weapon's wrist limits are measured from the angle it was built at, so rebuild it for the new facing.
+        foreach (var weapon in GetComponentsInChildren<Weapon>())
+            if (weapon.wrist != null) RebuildWrist(weapon);
+
+        // A shield's grip angle is baked into its fixed joint, so rebuild that joint at the mirrored angle.
         foreach (var fixedJoint in GetComponentsInChildren<FixedJoint2D>())
         {
             var go = fixedJoint.gameObject;

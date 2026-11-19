@@ -23,14 +23,14 @@ public class Weapon : MonoBehaviour
     const float FistMinSpeed = 3f;
     const float FistMass = 0.6f;
     /// <summary>A hit with this impulse (N·s) does the weapon's listed damage.</summary>
-    public static float ReferenceImpact = 5f; // measured: landed hits average ~3.4 N·s, solid ones 5–10
+    public static float ReferenceImpact = 7f; // 5 before swings reliably connected (hit rate ~20% → ~50%); rounds got too short
     /// <summary>Contacts below this impulse / relative speed do nothing at all (blades resting against something).</summary>
     public static float MinImpact = 0.2f;
     public static float MinContactSpeed = 0.5f;
     /// <summary>Weakest and strongest swing, as a share of the weapon's listed damage (before armour).</summary>
     public static float MinForce = 0.25f, MaxForce = 1.3f;
     /// <summary>No single hit takes more than this share of the victim's maximum health.</summary>
-    public static float MaxHitShare = 0.25f;
+    public static float MaxHitShare = 0.2f;
     /// <summary>
     /// A touch from a hand that isn't attacking hurts only if the attacker's own weapon was moving <b>into</b> the
     /// victim at <see cref="TouchMinSpeed"/> m/s or more just before contact — stepping into a resting blade or a
@@ -69,8 +69,21 @@ public class Weapon : MonoBehaviour
     public static float TrailSpeed = 6f;
     /// <summary>Motion trail at the blade tip (set up by RagdollBody); null for fists and shields.</summary>
     public TrailRenderer trail;
+
+    /// <summary>
+    /// The wrist (set up by RagdollBody; null for fists and shields): at guard the weapon is held at the definition's
+    /// <c>gripAngle</c> (blade up when the arm is forward); while the hand attacks the wrist snaps it to
+    /// <see cref="StrikeGrip"/>, nearly in line with the forearm, so the blade extends the arm and its tip sweeps a
+    /// full-radius arc through the target — the big Bloody Bastards-style swing. The snap also adds tip speed.
+    /// </summary>
+    public MotorDrive wrist;
+    /// <summary>Grip angle while striking (degrees from the forearm line; 0 = blade straight along the arm).</summary>
+    public static float StrikeGrip = 12f;
     Rigidbody2D body;
     bool whooshing;
+    /// <summary>One damaging hit per strike: once a strike has landed (or been blocked) it's spent, so a blade sweeping
+    /// through head, arm and torso doesn't hit three times. A new strike starts when the hand starts striking again.</summary>
+    bool wasStriking, strikeSpent;
     Vector2 preStepVelocity, preStepCenter;
     float preStepAngular;
 
@@ -84,8 +97,14 @@ public class Weapon : MonoBehaviour
             preStepCenter = body.worldCenterOfMass;
         }
 
+        if (hand != null)
+        {
+            if (hand.Striking && !wasStriking) strikeSpent = false;
+            wasStriking = hand.Striking;
+        }
+
         // Whoosh when the striking part rushes through the air (each time it crosses the speed).
-        if (IsShield) UpdateShieldGuard();
+        if (definition != null) UpdateGuard();
         if (strikeCollider == null || owner == null || owner.IsHelpless) return;
         if (trail != null) trail.emitting = !IsShield && body.GetPointVelocity(strikeCollider.bounds.center).magnitude > TrailSpeed;
         if (IsShield) return;
@@ -94,21 +113,34 @@ public class Weapon : MonoBehaviour
         else if (whooshing && speed < WhooshSpeed * 0.6f) whooshing = false;
     }
 
-    Collider2D[] shieldColliders;
+    Collider2D[] guardColliders;
 
     /// <summary>
-    /// A shield only defends while it's held up (its hand's button pressed, or the AI blocking/bashing).
-    /// Lowered, it hangs at the side and blades pass it: its colliders become triggers.
-    /// A fallen fighter's shield stays solid so it lies on the floor.
+    /// Blocking is a choice: a shield or weapon is only solid while its hand is in use (shield held up, a swing, a
+    /// parry, free aim). Resting, it hangs in guard and blades pass it — its colliders become triggers — so idle
+    /// weapons don't stop every blow (they blocked ~40% of all swings) and don't graze anyone either.
+    /// A fallen fighter's weapons stay solid so they lie on the floor.
     /// </summary>
-    void UpdateShieldGuard()
+    void UpdateGuard()
     {
-        if (shieldColliders == null) shieldColliders = GetComponents<Collider2D>();
-        bool raised = owner == null || owner.IsHelpless || (hand != null && hand.Active);
-        foreach (var c in shieldColliders) if (c.isTrigger == raised) c.isTrigger = !raised;
+        if (guardColliders == null) guardColliders = GetComponents<Collider2D>();
+        bool inUse = owner == null || owner.IsHelpless || (hand != null && hand.Active);
+        foreach (var c in guardColliders) if (c.isTrigger == inUse) c.isTrigger = !inUse;
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    void OnCollisionEnter2D(Collision2D collision) => Contact(collision);
+
+    /// <summary>
+    /// A strike that starts with the blade already resting against them (a close clinch) never gets a fresh "enter",
+    /// so while the hand is striking, ongoing contact counts too; the per-part cooldown and the speed/impulse
+    /// thresholds keep it from grinding out damage.
+    /// </summary>
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        if (hand != null && hand.Striking) Contact(collision);
+    }
+
+    void Contact(Collision2D collision)
     {
         if (owner == null || owner.IsHelpless || strikeCollider == null) return; // limp flailing doesn't count
         if (collision.otherCollider != strikeCollider) return; // the handle only bumps
@@ -156,6 +188,7 @@ public class Weapon : MonoBehaviour
         {
             float blockSpeed = definition != null ? definition.minImpactSpeed : FistMinSpeed;
             if (speed < blockSpeed || impact < BlockMinImpact) return;
+            if (hand != null && hand.Striking) { if (strikeSpent) return; strikeSpent = true; } // a blocked strike is spent
             lastHitOn[collision.collider] = Time.time;
             StatBlocked++;
             float cost = impact * (otherWeapon.IsShield ? 1.2f : 0.8f);
@@ -175,6 +208,7 @@ public class Weapon : MonoBehaviour
         // itself was driving into the victim — not by impulse (a pushed heavy weapon would hit like a swing) and not
         // by relative speed (the victim's own step into a resting blade would count).
         bool swing = hand != null && hand.Striking;
+        if (swing && strikeSpent) return;
         float force;
         if (swing) force = Mathf.Clamp(impact / ReferenceImpact, MinForce, MaxForce);
         else
@@ -196,6 +230,7 @@ public class Weapon : MonoBehaviour
         damage = Mathf.Min(damage, part.fighter.MaxHealth * MaxHitShare);
 
         lastHitOn[collision.collider] = Time.time;
+        if (swing) strikeSpent = true;
         StatHits++;
         StatDamage += damage;
         StatImpact += impact;

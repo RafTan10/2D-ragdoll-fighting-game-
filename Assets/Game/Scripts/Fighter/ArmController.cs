@@ -17,6 +17,11 @@ public class ArmController : MonoBehaviour
     [Tooltip("Share of full speed used when returning to guard.")]
     [SerializeField] float guardSpeedShare = 0.45f;
 
+    [Tooltip("How hard the wrist snaps the weapon between guard and strike grip (motor speed per degree of error).")]
+    [SerializeField] float wristGain = 30f;
+    [Tooltip("Top wrist speed, deg/s: a fast snap adds tip speed at the start of a strike.")]
+    [SerializeField] float wristSpeed = 1400f;
+
     [Header("Guard poses (shoulder, elbow degrees; 0 = hanging down, + = forward)")]
     [Tooltip("High guard: forearm forward at chest height, blade up (shoulder + elbow + the weapon's grip ≈ 175°). " +
              "A low guard pointed the blade at the opponent's thighs, so long weapons grazed legs all the time.")]
@@ -58,6 +63,14 @@ public class ArmController : MonoBehaviour
         }
         hand.shoulder.To(shoulder, fighter.Facing, gain, maxSpeed, shoulderTorque);
         hand.elbow.To(elbow, fighter.Facing, gain, maxSpeed, elbowTorque);
+
+        // Wrist: snap the blade in line with the arm while attacking, back to the guard grip otherwise.
+        var wrist = hand.weaponObject != null ? hand.weaponObject.wrist : null;
+        if (wrist != null)
+        {
+            float grip = hand.Striking ? Weapon.StrikeGrip : hand.weapon.gripAngle;
+            wrist.To(180f + grip, fighter.Facing, wristGain, wristSpeed, wrist.maxTorque * strength);
+        }
     }
 
     /// <summary>

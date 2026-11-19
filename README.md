@@ -13,6 +13,7 @@ Every fighter is a real physics ragdoll. Every hand swings on its own. Every hit
 - **Nothing is animated, everything is simulated.** Fighters are ragdolls held up by muscles (joint motors). Swing too hard and you wobble; take a big hit and you fold.
 - **Two hands, two weapons, two buttons.** Your left and right hand act separately: chop with one, block with the other, or swing both.
 - **Hits are physics, not hitboxes on a timer.** Damage comes from the real impulse at the moment of contact. A slow brush does almost nothing; a full-arc overhead to the head does a lot.
+- **Swings that connect.** The arm drives the whole arc at its real speed (heavy weapons are slower), the wrist snaps the blade in line, and the arc is aimed through the opponent's head or chest — so a committed swing lands, gets blocked, or visibly whiffs. Each swing hurts once; a raised weapon or shield parries, a lowered one doesn't get in the way.
 - **Armour that breaks.** Plate, mail and leather soak blows and wear down per body part (head, torso, arms, legs) until they shatter — then that spot bleeds.
 - **Stamina, knockdowns and fainting.** Spam swings and you run dry and faint; get tipped over and you have to scramble back up.
 - **The cast is real.** Knight, Barbarian and Ronin are joined by the developer's friends, drawn pixel by pixel from their photos.

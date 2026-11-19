@@ -201,6 +201,24 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       "bodyguard"), **Nameer** (maroon panjabi, stubble; two daggers, fastest). Builder options added: Checked shirt
       (plaid in the accent colour), Open shirt over tee, Suit jacket, Bandana. 16 fighters in total. Lesson: a bare off hand
       (no shield / second weapon) loses to the Barbarian even with buffs — give single-weapon fighters a dagger.
+- [x] **Swings that connect** (user: "weapon swinging and not properly connecting doesn't seem fun"; Bloody Bastards
+      reference = every swing is real physics, big arcs, spacing/reach matter). Measured first (`Weapon.Stat*` + a
+      per-swing probe): only ~15–21% of swings hit, ~70% whiffed — the clock-driven aim point ran ~0.8 m ahead of the
+      real hand and the blade sat at a fixed 80° to the forearm, so the tip swept past or behind the target. Fixes:
+      (1) **wrist** — weapons hang on a `HingeJoint2D` motor (`RagdollBody.MakeWrist`, `wristTorque` 45 × strength,
+      rebuilt by `Mirror`); while striking it snaps the blade in line with the arm (`Weapon.StrikeGrip` 12°), at rest it
+      holds `gripAngle`; shields keep the fixed joint. (2) **arm-driven arcs** (`SwingMove.ArmDriven`): the wind-up waits
+      for the hand to reach the top, then the aim point stays `StrikeLead` 70° ahead of the *real* hand until the arc is
+      done (max `MaxStrike` 0.6 s) — heavy weapons sweep slower but always finish. (3) **adaptive radius**
+      (`SwingRadius`): the hand pulls in for a close opponent so the blade's sweet spot, not the handle, crosses the
+      target. (4) **active blocking only**: a weapon, like a shield, is solid only while its hand is in use (`Hand.Active`)
+      — resting weapons were parrying 34–44% of swings by accident (`Weapon.UpdateGuard`). (5) a striking weapon also
+      hits on `OnCollisionStay2D` (blades that arrive already touching), but **one damaging hit (or block) per strike**
+      (`strikeSpent`). (6) `ReferenceImpact` 5 → 7 N·s and `MaxHitShare` 0.25 → 0.2, so more hits don't mean 5 s rounds.
+      Measured (Hard vs Hard, 45–50 s each): Knight vs Barbarian 29 hit / 19 blocked / 19 missed of 67 swings, Hamza vs
+      Tanim 21/4/4 of 29, Samshad vs Tahmeed 23/22/20 of 65 (≈45% hits, blocks now only from raised guards, zero
+      "touched but no damage" swings). Rounds: KvB 33–62 s, Hamza vs Tanim 15–21 s, Alavi vs Ishtiaq 19–27 s.
+      Not yet felt with real mouse/keyboard (Editor unfocused).
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -329,12 +347,14 @@ weapon fixed joints are rebuilt) so both face each other again. Jumps tuck the l
 still collides, so clearing the opponent depends on distance and their guard.
 
 Damage only comes from a weapon's **striking part** (blade / head / fist). A swing (`Hand.Striking`) does damage ×
-(impulse / 5 N·s, clamped 0.25–1.3). Any other touch hurts only if the attacker's **own** weapon was moving **into**
+(impulse / 7 N·s, clamped 0.25–1.3), once per strike (a block also spends it); while striking, contacts that began
+before the strike (`OnCollisionStay2D`) count too. Any other touch hurts only if the attacker's **own** weapon was moving **into**
 the victim at ≥ 1.5 m/s just before contact (`Weapon.ApproachVelocity`, recorded before the physics step) — the
 victim stepping into a resting blade or a blade sliding along a limb does nothing — for damage × (that speed / 16,
 clamped 0.05–0.15). Then × body part (head 1.5) × strength × attacker `DamageMultiplier` × 0.6 for an off-hand
-weapon; armour (`ArmorController`) soaks part and wears down until it breaks; × victim `DamageTaken`; capped at 25%
-of the victim's max health per hit (`Weapon.MaxHitShare`). A shield only blocks while held.
+weapon; armour (`ArmorController`) soaks part and wears down until it breaks; × victim `DamageTaken`; capped at 20%
+of the victim's max health per hit (`Weapon.MaxHitShare`). A shield — and a weapon — only blocks while its hand is in
+use (held block, swing, free aim); a resting weapon's colliders are triggers.
 Difficulty (`AIProfile`, Easy / Normal / Hard): AI damage ×0.7 / 0.9 / 1.0, player damage taken ×0.5 / 0.65 / 0.9,
 player damage dealt ×1.3 / 1.15 / 1.0, AI touches hurt only on Hard, player hitboxes narrowed to 75 / 80 / 85%
 (`playerHitboxWidth`; lower legs keep full width for the feet). Resting weapons are held in a high guard
