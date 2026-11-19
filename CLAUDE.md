@@ -232,6 +232,26 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       Menu keys: A/D left fighter, ←/→ right fighter, Tab mode, Enter fight. **Friends first:** stock fighters
       (`FighterDefinition.stock` = Knight, Barbarian, Ronin) sit at the end of `GameDatabase.fighters`;
       `ContentTools.CreateFighter` inserts new fighters before the first stock one.
+- [x] **Power Mode** (menu toggle "SUPER POWERS", key P; `MatchManager.powerMode` → `Fighter.EnablePowers()` adds a
+      `PowerController`). A super meter fills from damage dealt (`dealGain` 1 × share of the victim's health), damage
+      taken (0.85 × own share — the losing side charges faster), blocks (0.03) and time (0.008/s); full → one press fires
+      `FighterDefinition.power` (kind) under its own `powerName` / `powerColor`. 8 kinds, all physics / buff based
+      (`Fighter.BuffDamage / BuffDefense / BuffArms / BuffMove`, `Unstoppable`, `FreeStamina`, `StunnedUntil`):
+      Rage (6 s ×1.4 dmg, faster arms/feet), Shockwave (≤ 2.8 m: impulse away + up, 8 dmg, knock-down 1.2 s), Freeze (2 s
+      stun), Dash (rush in with the weapon lowered, then one unblockable blow = weapon damage ×1.5 + knock-down), Fortify
+      (5 s ×0.25 damage, no stagger/knock-down, attackers bounce back), GiantWeapon (6 s main weapon ×1.7 size, ×1.25
+      mass/dmg), Flurry (4 s auto chop/slash with both hands, ×1.5 arms, ×1.2 dmg, no stamina cost), SecondWind (full
+      stamina, +20% health, 6 s ×1.4 feet, no stamina cost). Power blows go through `Weapon.ApplyBlow` (same armour,
+      cap, knockback and Hit event as weapons). Keys: solo E / gamepad Y / on-screen POWER button; 2-player P1 Q,
+      P2 Right Ctrl (numpad 3). AI (`AIBrain.WantsPower`) waits `reactionTime × 6` on a full meter, then fires when the
+      kind fits (shockwave close, dash at mid range, fortify when attacked or < 45% health, second wind when tired…).
+      Feedback (`HitFeedback.OnPowerUsed`): coloured ring + burst, synthesized power-up sound (`GameFeel.Sound.Power`),
+      hit-stop, shake, `PowerAura` glow for the duration (on the frozen opponent for Freeze), HUD meter under the
+      armour bar ("★ POWER READY [key]") and a "NAME — POWER!" banner. Roster: Tanim Biker Rage, Tahseen Power Chord
+      (shockwave + strum), Akib Audit (freeze), Alif Hotfix (dash), Ishtiaq Ground Slam (shockwave), Nawfel Giant Hammer,
+      Samshad Dark Ward / Tahmeed Bodyguard / Knight Shield Wall (fortify), Nuha Handbag Fury / Nameer Blade Flurry
+      (flurry — the bag stays visual-only), Hamza Flash Step / Tamim Timber / Ronin Iaido (dash), Alavi Second Wind,
+      Barbarian Berserk (rage).
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -259,11 +279,12 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
 Assets/Game/
   Scripts/Data/      FighterDefinition, WeaponDefinition, ArenaDefinition, AIProfile, GameDatabase
   Scripts/Fighter/   Fighter (coordinator: health, input, events), RagdollBody (build, mirror, ground), BalanceController,
-                     LocomotionController, ArmController (IK), StaminaController, KnockdownController, ArmorController
+                     LocomotionController, ArmController (IK), StaminaController, KnockdownController, PowerController (Power Mode), ArmorController
                      (breakable armour), MotorDrive, PixelBounds,
                      BodyPart, Weapon (hit detection + damage), HandMoves (SwingMove, BlockAim), FighterInput,
                      PlayerBrain, AIBrain, ScriptBrain (tests)
-  Scripts/Combat/    HitEvents (Hit / Blocked events), HitFeedback (effects, sound, hit-stop, camera trauma)
+  Scripts/Combat/    HitEvents (Hit / Blocked / PowerUsed events), HitFeedback (effects, sound, hit-stop, camera trauma),
+                     ImpactFX, PowerAura
   Scripts/Match/     MatchManager (best-of-3 rounds + IMGUI HUD/select screen), MenuArt (menu portraits, heads, arena
                      backdrop), OnScreenControls, GameFeel (time scale, sounds),
                      ArenaView, CameraRig, BloodFX (blood/sparks/dust), RainFX, HitboxOverlay
@@ -349,6 +370,8 @@ docs/                Ragdoll_Style_Guide.md (how to make fighters from photos)
 
 2-player (menu: **2 PLAYERS** / Tab): P1 A/D · W · LShift · F (left hand) · G (right hand) · gamepad 1;
 P2 →/← · ↑ · RShift · K · L (numpad 1/2) · gamepad 2. Menu: A/D left fighter, ←/→ right fighter, Enter fight.
+Power Mode (menu **SUPER POWERS** / P): fire the super power with E (solo), Q (P1), Right Ctrl / numpad 3 (P2),
+gamepad Y, or the on-screen POWER button.
 
 Swings alternate an overhead chop and a side slash. On a touchscreen, holding/dragging anywhere that isn't a
 button also free-aims (right half = right hand), and a double-tap lunges.

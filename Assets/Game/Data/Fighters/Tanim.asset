@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 2
   armArmor: 2
   legArmor: 1
+  power: 1
+  powerName: Biker Rage
+  powerColor: {r: 0.95, g: 0.22, b: 0.15, a: 1}
   mainHand: {fileID: 11400000, guid: fe588785291414b43b18eb03fc3945da, type: 2}
   offHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}

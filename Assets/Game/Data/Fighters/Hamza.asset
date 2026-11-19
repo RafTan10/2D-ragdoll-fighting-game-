@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 4
+  powerName: Flash Step
+  powerColor: {r: 1, g: 1, b: 0.85, a: 1}
   mainHand: {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
   offHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}

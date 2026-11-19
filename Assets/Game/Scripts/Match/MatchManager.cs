@@ -16,6 +16,8 @@ public class MatchManager : MonoBehaviour
     public int difficultyIndex = 1;
     [Tooltip("Local 2-player: both fighters are humans sharing the keyboard (and one gamepad each). No AI, no difficulty handicaps.")]
     public bool twoPlayer;
+    [Tooltip("Power Mode: a super meter fills while fighting; when full, each fighter can fire their super power.")]
+    public bool powerMode;
 
     [Tooltip("Skip the select screen and fight straight away (handy for testing).")]
     public bool autoStart;
@@ -44,8 +46,20 @@ public class MatchManager : MonoBehaviour
     string playerNotice, enemyNotice;
     float playerNoticeUntil, enemyNoticeUntil;
 
-    void OnEnable() => HitEvents.ArmorBroken += OnArmorBroken;
-    void OnDisable() => HitEvents.ArmorBroken -= OnArmorBroken;
+    void OnEnable() { HitEvents.ArmorBroken += OnArmorBroken; HitEvents.PowerUsed += OnPowerUsed; }
+    void OnDisable() { HitEvents.ArmorBroken -= OnArmorBroken; HitEvents.PowerUsed -= OnPowerUsed; }
+
+    // "TANIM — BIKER RAGE!" across the top for a moment when a power fires.
+    string powerBanner;
+    Color powerBannerColor;
+    float powerBannerUntil;
+
+    void OnPowerUsed(PowerInfo info)
+    {
+        powerBanner = info.fighter.Definition.displayName.ToUpperInvariant() + " — " + info.name.ToUpperInvariant() + "!";
+        powerBannerColor = info.color;
+        powerBannerUntil = Time.unscaledTime + 1.6f;
+    }
 
     void OnArmorBroken(ArmorBreakInfo info)
     {
@@ -59,6 +73,7 @@ public class MatchManager : MonoBehaviour
         if (database == null) { Debug.LogError("MatchManager needs a GameDatabase."); enabled = false; return; }
         BloodFX.Material = database.spriteMaterial;
         ImpactFX.Material = database.spriteMaterial;
+        PowerAura.Material = database.spriteMaterial;
         // Ragdoll chains (torso > arm > forearm > weapon) jitter badly with the default 8/3 solver iterations.
         Physics2D.velocityIterations = 20;
         Physics2D.positionIterations = 8;
@@ -107,12 +122,15 @@ public class MatchManager : MonoBehaviour
         }
         player.KnockedOut += OnKnockedOut;
         enemy.KnockedOut += OnKnockedOut;
+        if (powerMode) { player.EnablePowers(); enemy.EnablePowers(); }
+        powerBannerUntil = 0f;
 
         state = State.Fighting;
 
         if (controls == null) controls = gameObject.AddComponent<OnScreenControls>();
         controls.player = player;
         controls.enabled = showOnScreenControls && !twoPlayer; // one set of buttons can't serve two players
+        controls.showPower = powerMode;
     }
 
     void OnKnockedOut(Fighter loser)
@@ -168,6 +186,7 @@ public class MatchManager : MonoBehaviour
             if (kb.leftArrowKey.wasPressedThisFrame) opponentIndex = Wrap(opponentIndex - 1, n);
             if (kb.rightArrowKey.wasPressedThisFrame) opponentIndex = Wrap(opponentIndex + 1, n);
             if (kb.tabKey.wasPressedThisFrame) twoPlayer = !twoPlayer;
+            if (kb.pKey.wasPressedThisFrame) powerMode = !powerMode;
             if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) StartMatch();
         }
     }
@@ -225,22 +244,50 @@ public class MatchManager : MonoBehaviour
     static readonly Color P1Color = new Color(0.38f, 0.64f, 1f);
     static readonly Color P2Color = new Color(0.96f, 0.38f, 0.32f);
     static readonly Color PanelColor = new Color(0.05f, 0.04f, 0.05f, 0.78f);
+    static readonly Color PowerAccent = new Color(0.72f, 0.5f, 1f);
+
+    /// <summary>What each kind of power does, in a few words (menu cards).</summary>
+    static string PowerBlurb(PowerKind k)
+    {
+        switch (k)
+        {
+            case PowerKind.Rage: return "hits harder and faster";
+            case PowerKind.Shockwave: return "a blast that knocks them flat";
+            case PowerKind.Freeze: return "freezes the opponent";
+            case PowerKind.Dash: return "unblockable dash strike";
+            case PowerKind.Fortify: return "blows bounce off";
+            case PowerKind.GiantWeapon: return "weapon grows huge";
+            case PowerKind.Flurry: return "nonstop flurry of swings";
+            case PowerKind.SecondWind: return "stamina, health and speed";
+            default: return "";
+        }
+    }
+
+    /// <summary>The power key for this fighter, or null for the AI.</summary>
+    string PowerKey(Fighter f)
+    {
+        if (twoPlayer) return f == player ? "Q" : "R-Ctrl";
+        return f == player ? "E" : null;
+    }
 
     GUIStyle Style(int size, FontStyle fs = FontStyle.Normal, TextAnchor a = TextAnchor.MiddleCenter, Color? c = null)
     {
         var s = new GUIStyle(GUI.skin.label) { fontSize = size, fontStyle = fs, alignment = a, wordWrap = false, clipping = TextClipping.Overflow };
-        s.normal.textColor = c ?? Color.white;
+        SetTextColor(s, c ?? Color.white);
         return s;
     }
 
     void Shadowed(Rect r, string text, GUIStyle s)
     {
         var col = s.normal.textColor;
-        s.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
+        SetTextColor(s, new Color(0f, 0f, 0f, 0.8f));
         GUI.Label(new Rect(r.x + 2, r.y + 2, r.width, r.height), text, s);
-        s.normal.textColor = col;
+        SetTextColor(s, col);
         GUI.Label(r, text, s);
     }
+
+    /// <summary>Same colour in every state: IMGUI labels switch to the skin's hover colour under the mouse.</summary>
+    static void SetTextColor(GUIStyle s, Color c) => s.normal.textColor = s.hover.textColor = s.active.textColor = s.focused.textColor = c;
 
     /// <summary>A flat button: dark, outlined in <paramref name="accent"/>, filled with it when lit (selected or hovered).</summary>
     bool FlatButton(Rect r, string text, Color accent, bool selected, int size = 15)
@@ -280,24 +327,25 @@ public class MatchManager : MonoBehaviour
 
         // Middle column: VS, arena, difficulty, FIGHT
         float cx = w * 0.5f;
-        Shadowed(new Rect(cx - 80, 150, 160, 70), "VS", Style(56, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white));
-        arenaIndex = Stepper(new Rect(cx - 130, 240, 260, 34), "ARENA", database.arenas, arenaIndex, a => a.displayName);
-        if (!twoPlayer) difficultyIndex = Stepper(new Rect(cx - 130, 300, 260, 34), "DIFFICULTY", database.aiProfiles, difficultyIndex, p => p.displayName);
-        else GUI.Label(new Rect(cx - 130, 300, 260, 34), "even fight · no handicaps", Style(13, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.75f)));
-        if (FlatButton(new Rect(cx - 110, 362, 220, 54), "FIGHT!", Gold, true, 26)) StartMatch();
-        GUI.Label(new Rect(cx - 110, 416, 220, 20), "Enter", Style(12, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.6f)));
+        Shadowed(new Rect(cx - 80, 128, 160, 60), "VS", Style(50, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white));
+        arenaIndex = Stepper(new Rect(cx - 130, 222, 260, 34), "ARENA", database.arenas, arenaIndex, a => a.displayName);
+        if (!twoPlayer) difficultyIndex = Stepper(new Rect(cx - 130, 276, 260, 34), "DIFFICULTY", database.aiProfiles, difficultyIndex, p => p.displayName);
+        else GUI.Label(new Rect(cx - 130, 276, 260, 34), "even fight · no handicaps", Style(13, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.75f)));
+        if (FlatButton(new Rect(cx - 130, 318, 260, 32), powerMode ? "★ SUPER POWERS: ON" : "SUPER POWERS: OFF", PowerAccent, powerMode, 14)) powerMode = !powerMode;
+        if (FlatButton(new Rect(cx - 110, 362, 220, 50), "FIGHT!", Gold, true, 26)) StartMatch();
+        GUI.Label(new Rect(cx - 110, 412, 220, 20), "Enter", Style(12, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.6f)));
 
         RosterStrip(w, 462f);
 
         // Controls for the chosen mode
         var hint = Style(12, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.85f));
         string keys = twoPlayer
-            ? "<color=#7fb0ff>P1</color>  A / D move · W jump · L-Shift lunge · F left hand · G right hand · gamepad 1        " +
-              "<color=#ff7a6e>P2</color>  ← / → move · ↑ jump · R-Shift lunge · K left hand · L right hand · gamepad 2"
-            : "J / K  right / left hand (weapons swing, shields block) · A / D back / forward · Space jump · Shift lunge · hold mouse buttons to aim freely";
+            ? "<color=#7fb0ff>P1</color>  A / D move · W jump · L-Shift lunge · F / G hands" + (powerMode ? " · Q power" : "") + " · pad 1        " +
+              "<color=#ff7a6e>P2</color>  ← / → move · ↑ jump · R-Shift lunge · K / L hands" + (powerMode ? " · R-Ctrl power" : "") + " · pad 2"
+            : "J / K  right / left hand (weapons swing, shields block) · A / D back / forward · Space jump · Shift lunge" + (powerMode ? " · E super power" : "") + " · hold mouse buttons to aim freely";
         hint.richText = true;
         GUI.Label(new Rect(0, h - 36, w, 18), keys, hint);
-        GUI.Label(new Rect(0, h - 19, w, 18), "Tab: switch mode · H hitboxes · B blood · R restart round · Esc menu", hint);
+        GUI.Label(new Rect(0, h - 19, w, 18), "Tab: switch mode · P: super powers · H hitboxes · B blood · R restart round · Esc menu", hint);
     }
 
     /// <summary>One side's fighter: header, full-body portrait, name, tagline, loadout, stat bars, prev / next.</summary>
@@ -313,7 +361,7 @@ public class MatchManager : MonoBehaviour
         if (def == null) return index;
 
         // Portrait with prev / next arrows either side
-        var stage = new Rect(r.x + 40, r.y + 34, r.width - 80, 140);
+        var stage = new Rect(r.x + 40, r.y + 34, r.width - 80, 126);
         MenuArt.Fighter(stage, def, faceLeft);
         if (FlatButton(new Rect(r.x + 8, stage.center.y - 20, 28, 40), "<", accent, false, 18)) index = Wrap(index - 1, n);
         if (FlatButton(new Rect(r.xMax - 36, stage.center.y - 20, 28, 40), ">", accent, false, 18)) index = Wrap(index + 1, n);
@@ -327,7 +375,13 @@ public class MatchManager : MonoBehaviour
         string main = def.mainHand != null ? def.mainHand.displayName : "Fist";
         string off = def.offHand != null ? def.offHand.displayName : "Fist";
         GUI.Label(new Rect(r.x, y, r.width, 18), main + "  +  " + off, Style(13, FontStyle.Bold, TextAnchor.MiddleCenter, Gold));
-        y += 24;
+        y += 20;
+        if (powerMode && def.power != PowerKind.None)
+        {
+            var pc = Color.Lerp(def.powerColor, Color.white, 0.25f);
+            GUI.Label(new Rect(r.x, y, r.width, 18), "★ " + def.powerName + "  ·  " + PowerBlurb(def.power), Style(12, FontStyle.Bold, TextAnchor.MiddleCenter, pc));
+        }
+        y += 20;
 
         StatBar(new Rect(r.x + 14, y, r.width - 28, 10), "HEALTH", Mathf.InverseLerp(70f, 130f, def.maxHealth), accent); y += 16;
         StatBar(new Rect(r.x + 14, y, r.width - 28, 10), "POWER", Mathf.InverseLerp(0.8f, 1.25f, def.strength), accent); y += 16;
@@ -407,6 +461,16 @@ public class MatchManager : MonoBehaviour
         GUI.Label(new Rect(w * 0.5f - 60f, 14, 120, 34), playerScore + " - " + enemyScore, center);
         GUI.Label(new Rect(w * 0.5f - 90f, 40, 180, 24), "Best of " + (roundsToWin * 2 - 1), SmallCentered());
 
+        if (Time.unscaledTime < powerBannerUntil && !string.IsNullOrEmpty(powerBanner))
+        {
+            // Pops in big, settles, fades out.
+            float age = 1.6f - (powerBannerUntil - Time.unscaledTime);
+            int size = Mathf.RoundToInt(Mathf.Lerp(44f, 32f, Mathf.Clamp01(age / 0.15f)));
+            var c = Color.Lerp(powerBannerColor, Color.white, 0.2f);
+            c.a = Mathf.Clamp01((powerBannerUntil - Time.unscaledTime) / 0.3f);
+            Shadowed(new Rect(0, 78, w, 50), powerBanner, Style(size, FontStyle.Bold, TextAnchor.MiddleCenter, c));
+        }
+
         if (state == State.RoundOver || state == State.MatchOver)
             GUI.Label(new Rect(0, 200, w, 60), roundMessage, big);
         if (state == State.MatchOver)
@@ -436,6 +500,8 @@ public class MatchManager : MonoBehaviour
         GUI.color = Color.white;
 
         float below = ArmorBar(new Rect(r.x, stam.yMax + 2, r.width * 0.5f, 7), f, rightAligned, r.xMax);
+        string powerNote = null;
+        if (f.Powers != null) below = PowerMeter(new Rect(r.x, below + 2, r.width * 0.5f, 7), f, rightAligned, r.xMax, out powerNote);
 
         var label = new Rect(r.x, below + 2, r.width, 22);
         normal.alignment = rightAligned ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
@@ -443,9 +509,37 @@ public class MatchManager : MonoBehaviour
         bool mine = f == player;
         string notice = (mine ? playerNoticeUntil : enemyNoticeUntil) > Time.unscaledTime ? (mine ? playerNotice : enemyNotice) : null;
         if (notice != null) status += "   " + notice;
+        if (powerNote != null) status += "   " + powerNote;
         string name = f.Definition.displayName;
         if (twoPlayer) name = mine ? "P1  " + name : name + "  P2";
         GUI.Label(label, rightAligned ? status.Trim() + "   " + name : name + status, normal);
+    }
+
+    /// <summary>
+    /// The super meter: violet while charging, the power's colour (pulsing) when full, draining while it's active.
+    /// Returns the bottom edge; <paramref name="note"/> says READY (with the key) or names the power while it runs.
+    /// </summary>
+    float PowerMeter(Rect r, Fighter f, bool rightAligned, float rightEdge, out string note)
+    {
+        var p = f.Powers;
+        note = null;
+        if (rightAligned) r.x = rightEdge - r.width;
+        MenuArt.Fill(r, new Color(0f, 0f, 0f, 0.8f));
+        float t;
+        Color c;
+        if (p.Active) { t = p.ActiveLeft; c = p.Color; note = "★ " + p.Name.ToUpperInvariant(); }
+        else if (p.Ready)
+        {
+            t = 1f;
+            c = Color.Lerp(p.Color, Color.white, 0.35f + 0.35f * Mathf.Sin(Time.unscaledTime * 10f));
+            string key = PowerKey(f);
+            note = "★ POWER READY" + (key != null ? " [" + key + "]" : "");
+        }
+        else { t = p.Meter; c = new Color(0.62f, 0.42f, 0.95f); }
+        var fill = new Rect(r.x + 1, r.y + 1, (r.width - 2) * t, r.height - 2);
+        if (rightAligned) fill.x = r.xMax - 1 - fill.width;
+        MenuArt.Fill(fill, c);
+        return r.yMax;
     }
 
     static readonly PartKind[] ArmorRegions = { PartKind.Head, PartKind.Torso, PartKind.Arm, PartKind.Leg };

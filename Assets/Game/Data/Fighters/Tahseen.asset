@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 2
+  powerName: Power Chord
+  powerColor: {r: 0.45, g: 0.85, b: 1, a: 1}
   mainHand: {fileID: 11400000, guid: d8ea39eba6313b64d9b47b4f5ca05d12, type: 2}
   offHand: {fileID: 0}

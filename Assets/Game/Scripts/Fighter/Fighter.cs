@@ -78,6 +78,23 @@ public class Fighter : MonoBehaviour
     /// <summary>Whether this fighter's non-swing weapon touches can hurt (off for the AI on Easy / Normal).</summary>
     public bool TouchesHurt = true;
 
+    // ---------------------------------------------------------------- super powers (Power Mode)
+    /// <summary>The super meter and power; null unless the match is in Power Mode.</summary>
+    public PowerController Powers { get; private set; }
+    /// <summary>Set every step by an active power (1 = normal): damage dealt, damage taken, arm speed, walk speed.</summary>
+    [NonSerialized] public float BuffDamage = 1f, BuffDefense = 1f, BuffArms = 1f, BuffMove = 1f;
+    /// <summary>An active power: can't be staggered or knocked down / doesn't tire.</summary>
+    [NonSerialized] public bool Unstoppable, FreeStamina;
+    /// <summary>Frozen by the opponent's power until this time: no input, the hands drop.</summary>
+    [NonSerialized] public float StunnedUntil;
+    public bool IsStunned => Time.time < StunnedUntil;
+
+    public PowerController EnablePowers()
+    {
+        if (Powers == null) { Powers = gameObject.AddComponent<PowerController>(); Powers.Init(this); }
+        return Powers;
+    }
+
     public event Action<Fighter> KnockedOut;
 
     FighterInput input;
@@ -119,7 +136,7 @@ public class Fighter : MonoBehaviour
     void Update()
     {
         UpdateFlashes();
-        if (IsHelpless || Brain == null)
+        if (IsHelpless || Brain == null || IsStunned)
         {
             input = default;
             MainHand.Active = OffHand.Active = false;
@@ -127,6 +144,7 @@ public class Fighter : MonoBehaviour
             return;
         }
         input = Brain.Think(this, Opponent);
+        if (Powers != null) Powers.Handle(ref input); // fires the power; some powers drive the hands themselves
         if (input.hop) Locomotion.QueueHop();
         if (input.jump) Locomotion.QueueJump();
         MainHand.Active = input.mainActive;
@@ -143,6 +161,7 @@ public class Fighter : MonoBehaviour
         if (IsKnockedOut) return;
         float dt = Time.fixedDeltaTime;
 
+        if (Powers != null) Powers.Tick(dt);
         StaminaSystem.Tick(dt);
         if (State != Condition.Standing)
         {
@@ -154,7 +173,7 @@ public class Fighter : MonoBehaviour
         // Everything the muscles do is scaled by tiredness and by stagger from recent hits.
         Balance.RecoverMuscle(dt);
         float strength = Fatigue * Balance.Muscle;
-        Arms.Tick(strength);
+        Arms.Tick(strength * BuffArms);
         Body.Neck.To(0f, Facing, 8f, 300f);
 
         bool grounded = Body.IsGrounded();
@@ -208,6 +227,12 @@ public class Fighter : MonoBehaviour
         }
         if (Health <= 0f) { KnockOut(); return; }
         Knockdown.OnDamaged(amount);
+    }
+
+    /// <summary>Health back (a power), never above the maximum.</summary>
+    public void Heal(float amount)
+    {
+        if (!IsKnockedOut) Health = Mathf.Min(MaxHealth, Health + amount);
     }
 
     void Flash(SpriteRenderer sr)

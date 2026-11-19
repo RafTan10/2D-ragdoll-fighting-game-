@@ -9,6 +9,8 @@ public struct FighterInput
     public bool hop;
     /// <summary>One-shot: jump up (and along with <see cref="move"/>). High enough to leap over the opponent.</summary>
     public bool jump;
+    /// <summary>Fire the super power (Power Mode, when the meter is full).</summary>
+    public bool power;
     /// <summary>A swing is in its striking phase: the body leans in and lunges with it.</summary>
     public bool attacking;
 

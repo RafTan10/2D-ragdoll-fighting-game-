@@ -98,7 +98,7 @@ public class LocomotionController : MonoBehaviour
     public void AirControl()
     {
         var body = fighter.Body;
-        float target = fighter.CurrentInput.move * fighter.Definition.walkSpeed;
+        float target = fighter.CurrentInput.move * fighter.Definition.walkSpeed * fighter.BuffMove;
         float accel = (target - body.Torso.linearVelocity.x) * walkAcceleration * airControl;
         if (Mathf.Abs(fighter.CurrentInput.move) < 0.1f) return;
         foreach (var b in body.Bodies) b.AddForce(new Vector2(accel * b.mass, 0f));
@@ -135,7 +135,7 @@ public class LocomotionController : MonoBehaviour
         {
             stepTimer -= dt;
             float progress = 1f - Mathf.Clamp01(stepTimer / stepDuration);
-            targetVx = stepDir * fighter.Definition.walkSpeed * stepSpeed * stepBoost * Mathf.Sin(progress * Mathf.PI);
+            targetVx = stepDir * fighter.Definition.walkSpeed * fighter.BuffMove * stepSpeed * stepBoost * Mathf.Sin(progress * Mathf.PI);
         }
         // Planted between steps: brake hard.
         float accel = (targetVx - vx) * walkAcceleration * (stepTimer > 0f ? 1f : plantedBrake);

@@ -23,6 +23,7 @@ public class HitFeedback : MonoBehaviour
         HitEvents.Blocked += OnBlocked;
         HitEvents.Bashed += OnBashed;
         HitEvents.ArmorBroken += OnArmorBroken;
+        HitEvents.PowerUsed += OnPowerUsed;
     }
 
     void OnDisable()
@@ -31,6 +32,34 @@ public class HitFeedback : MonoBehaviour
         HitEvents.Blocked -= OnBlocked;
         HitEvents.Bashed -= OnBashed;
         HitEvents.ArmorBroken -= OnArmorBroken;
+        HitEvents.PowerUsed -= OnPowerUsed;
+    }
+
+    [Header("Super powers")]
+    [SerializeField] float powerHitStop = 0.14f;
+    [SerializeField] float powerTrauma = 0.45f;
+
+    /// <summary>A super power firing: a burst and ring in its colour, the power-up sound, a beat of freeze, shake,
+    /// and an aura for as long as it lasts (on the frozen opponent for a freeze).</summary>
+    void OnPowerUsed(PowerInfo p)
+    {
+        var c = p.color;
+        ImpactFX.Ring(p.point, 2.6f, new Color(c.r, c.g, c.b, 0.9f), 0.35f);
+        ImpactFX.Hit(p.point, Vector2.up, 1.8f, new Color(Mathf.Lerp(c.r, 1f, 0.5f), Mathf.Lerp(c.g, 1f, 0.5f), Mathf.Lerp(c.b, 1f, 0.5f), 1f));
+        BloodFX.Sparks(p.point, 24);
+        GameFeel.Play(GameFeel.Sound.Power, 0.9f);
+        var weapon = p.fighter != null ? p.fighter.MainHand.weapon : null;
+        if (weapon != null && weapon.musical) GameFeel.Play(GameFeel.Sound.Twang, 1f);
+        if (p.kind == PowerKind.Shockwave)
+        {
+            // The blast itself: a wide ring along the floor and a kick of dust.
+            ImpactFX.Ring(p.point, 5.6f, new Color(c.r, c.g, c.b, 0.7f), 0.45f);
+            BloodFX.Dust(p.point + Vector2.down * 0.6f, Vector2.up, 40);
+            GameFeel.Play(GameFeel.Sound.Thud, 1f);
+        }
+        GameFeel.HitStop(powerHitStop);
+        if (CameraRig.Current != null) CameraRig.Current.AddTrauma(powerTrauma);
+        PowerAura.Show(p.kind == PowerKind.Freeze ? p.target : p.fighter, c, p.duration);
     }
 
     /// <summary>Armour falling apart: a burst of shards and sparks, a heavy clank, a short freeze.</summary>

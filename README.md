@@ -76,6 +76,19 @@ Extras: `H` shows hitboxes, `B` cycles blood (off / low / normal), `F3` logs eve
 | **Player 1** (left) | `A` / `D` | `W` | Left `Shift` | `F` | `G` | first pad |
 | **Player 2** (right) | `→` / `←` | `↑` | Right `Shift` | `K` | `L` | second pad |
 
+**Super powers.** Switch on **SUPER POWERS** on the menu (or press `P`). A meter under your armour bar fills as you fight: landing hits, taking hits (whoever is losing charges faster) and blocking. When it's full, fire your fighter's power with `E` (solo), `Q` (Player 1), `Right Ctrl` (Player 2), gamepad **Y** or the on-screen **POWER** button:
+
+| Power | Who | What it does |
+|---|---|---|
+| Rage | Tanim *(Biker Rage)*, Barbarian *(Berserk)* | 6 s of harder, faster hits and quicker feet |
+| Shockwave | Tahseen *(Power Chord)*, Ishtiaq *(Ground Slam)* | a blast that throws a nearby opponent off their feet |
+| Freeze | Akib *(Audit)* | the opponent can't move or guard for 2 s |
+| Dash | Alif *(Hotfix)*, Hamza *(Flash Step)*, Tamim *(Timber!)*, Ronin *(Iaido)* | rush in and land one unblockable, knock-down blow |
+| Fortify | Samshad *(Dark Ward)*, Tahmeed *(Bodyguard)*, Knight *(Shield Wall)* | 5 s of shrugging off blows; attackers bounce back |
+| Giant weapon | Nawfel *(Giant Hammer)* | the hammer grows huge and heavy for 6 s |
+| Flurry | Nuha *(Handbag Fury)*, Nameer *(Blade Flurry)* | 4 s of nonstop, tireless swings with both hands |
+| Second wind | Alavi *(Second Wind)* | full stamina, some health back, and fast feet |
+
 On the menu, `A` / `D` change the left fighter and `←` / `→` the right one. You can also click a face in the roster strip (right-click for the right side).
 
 ## Play it

@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 7
+  powerName: Blade Flurry
+  powerColor: {r: 0.92, g: 0.3, b: 0.42, a: 1}
   mainHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}
   offHand: {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}

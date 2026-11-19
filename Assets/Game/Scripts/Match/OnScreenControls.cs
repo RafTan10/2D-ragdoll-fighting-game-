@@ -13,15 +13,18 @@ public class OnScreenControls : MonoBehaviour
 {
     public static OnScreenControls Current { get; private set; }
 
-    public enum Button { Left, Right, Jump, OffHand, MainHand }
+    public enum Button { Left, Right, Jump, OffHand, MainHand, Power }
 
     /// <summary>Set by the match: the player fighter, for the hand labels.</summary>
     public Fighter player;
+    /// <summary>Power Mode: show the POWER button (lit when the meter is full).</summary>
+    public bool showPower;
 
     // ---- state read by PlayerBrain
     public bool MoveLeft => held[(int)Button.Left];
     public bool MoveRight => held[(int)Button.Right];
     public bool JumpPressed { get; private set; }
+    public bool PowerPressed { get; private set; }
     /// <summary>Right hand (main) button held.</summary>
     public bool MainHeld => held[(int)Button.MainHand];
     /// <summary>Left hand (off) button held.</summary>
@@ -33,19 +36,20 @@ public class OnScreenControls : MonoBehaviour
 
     const float DesignHeight = 540f;
 
-    readonly bool[] held = new bool[5];
-    readonly bool[] forced = new bool[5];
+    readonly bool[] held = new bool[6];
+    readonly bool[] forced = new bool[6];
 
     /// <summary>Holds a button from code (tests, tutorials, replays) as if a finger were on it.</summary>
     public void Force(Button b, bool on)
     {
         if (on && !forced[(int)b] && b == Button.Jump) forcedJump = true;
+        if (on && !forced[(int)b] && b == Button.Power) forcedPower = true;
         forced[(int)b] = on;
     }
-    bool forcedJump;
+    bool forcedJump, forcedPower;
     readonly int[] touchOnButton = new int[16];
     int mouseButton = -1;
-    readonly Rect[] rects = new Rect[5];
+    readonly Rect[] rects = new Rect[6];
 
     GUIStyle label, small;
 
@@ -64,6 +68,7 @@ public class OnScreenControls : MonoBehaviour
         rects[(int)Button.MainHand] = new Rect(w - 140, h - 150, 116, 116);
         rects[(int)Button.OffHand] = new Rect(w - 268, h - 122, 104, 104);
         rects[(int)Button.Jump] = new Rect(w - 128, h - 240, 92, 70);
+        rects[(int)Button.Power] = showPower ? new Rect(w - 248, h - 222, 104, 60) : new Rect(-1000, -1000, 0, 0);
     }
 
     int HitTest(Vector2 gui)
@@ -79,6 +84,8 @@ public class OnScreenControls : MonoBehaviour
         Layout();
         JumpPressed = forcedJump;
         forcedJump = false;
+        PowerPressed = forcedPower;
+        forcedPower = false;
         for (int i = 0; i < held.Length; i++) held[i] = forced[i];
 
         // Mouse: a press that starts on a button is captured by it until release.
@@ -90,6 +97,7 @@ public class OnScreenControls : MonoBehaviour
             {
                 mouseButton = HitTest(gui);
                 if (mouseButton == (int)Button.Jump) JumpPressed = true;
+                if (mouseButton == (int)Button.Power) PowerPressed = true;
             }
             if (!mouse.leftButton.isPressed) mouseButton = -1;
             if (mouseButton >= 0) held[mouseButton] = true;
@@ -108,6 +116,7 @@ public class OnScreenControls : MonoBehaviour
                 {
                     touchOnButton[i] = HitTest(gui);
                     if (touchOnButton[i] == (int)Button.Jump) JumpPressed = true;
+                    if (touchOnButton[i] == (int)Button.Power) PowerPressed = true;
                 }
                 if (!touch.press.isPressed) touchOnButton[i] = -1;
                 if (touchOnButton[i] >= 0) held[touchOnButton[i]] = true;
@@ -133,6 +142,11 @@ public class OnScreenControls : MonoBehaviour
         DrawButton(Button.Jump, "JUMP", null);
         DrawButton(Button.OffHand, "L", HandLabel(player != null ? player.OffHand : null));
         DrawButton(Button.MainHand, "R", HandLabel(player != null ? player.MainHand : null));
+        if (showPower && player != null && player.Powers != null)
+        {
+            var p = player.Powers;
+            DrawButton(Button.Power, p.Ready ? "POWER!" : Mathf.FloorToInt(p.Meter * 100f) + "%", p.Name, p.Ready ? p.Color : (Color?)null);
+        }
     }
 
     /// <summary>"Shield: block" / "Sword: swing" — what the button will do with what's in that hand.</summary>
@@ -143,11 +157,13 @@ public class OnScreenControls : MonoBehaviour
         return item + (hand.IsShield ? " · block" : " · swing");
     }
 
-    void DrawButton(Button b, string text, string caption)
+    void DrawButton(Button b, string text, string caption, Color? lit = null)
     {
         Rect r = rects[(int)b];
         bool down = held[(int)b];
-        GUI.color = down ? new Color(0.75f, 0.2f, 0.15f, 0.8f) : new Color(0.06f, 0.05f, 0.04f, 0.72f);
+        GUI.color = down ? new Color(0.75f, 0.2f, 0.15f, 0.8f)
+                  : lit.HasValue ? new Color(lit.Value.r, lit.Value.g, lit.Value.b, 0.55f + 0.25f * Mathf.Sin(Time.unscaledTime * 8f))
+                  : new Color(0.06f, 0.05f, 0.04f, 0.72f);
         GUI.DrawTexture(r, Texture2D.whiteTexture);
         GUI.color = new Color(1f, 1f, 1f, 0.35f);
         GUI.DrawTexture(new Rect(r.x, r.y, r.width, 2), Texture2D.whiteTexture);

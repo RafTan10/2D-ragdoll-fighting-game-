@@ -44,7 +44,7 @@ public class KnockdownController : MonoBehaviour
     /// <summary>Called for every hit that got through.</summary>
     public void OnDamaged(float amount)
     {
-        if (amount >= knockdownDamage && State == Fighter.Condition.Standing && !Steady)
+        if (amount >= knockdownDamage && State == Fighter.Condition.Standing && !Steady && !fighter.Unstoppable)
             GoDown(Fighter.Condition.Down, downTime * 0.8f);
     }
 
@@ -53,9 +53,15 @@ public class KnockdownController : MonoBehaviour
     {
         var body = fighter.Body;
         float tilt = Mathf.Abs(Mathf.DeltaAngle(body.Torso.rotation, 0f));
-        bool tipped = (tilt > tipAngle || body.Head.position.y < body.StandingHeight * headLowShare) && !Steady;
+        bool tipped = (tilt > tipAngle || body.Head.position.y < body.StandingHeight * headLowShare) && !Steady && !fighter.Unstoppable;
         tippedTime = tipped ? tippedTime + dt : 0f;
         if (tippedTime > tipTime) GoDown(Fighter.Condition.Down, downTime);
+    }
+
+    /// <summary>Knocked flat by a super power (a shockwave, a finishing dash), unless they're unstoppable.</summary>
+    public void KnockDown(float seconds)
+    {
+        if (State == Fighter.Condition.Standing && !fighter.Unstoppable) GoDown(Fighter.Condition.Down, seconds);
     }
 
     void GoDown(Fighter.Condition condition, float seconds)

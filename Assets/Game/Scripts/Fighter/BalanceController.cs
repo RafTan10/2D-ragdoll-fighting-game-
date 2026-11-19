@@ -62,7 +62,7 @@ public class BalanceController : MonoBehaviour
     public void Init(Fighter owner) => fighter = owner;
 
     /// <summary>A hit rocks the fighter: muscles drop to <paramref name="strength"/> and recover over time.</summary>
-    public void Stagger(float strength) => Muscle = Mathf.Min(Muscle, Mathf.Clamp01(strength));
+    public void Stagger(float strength) { if (!fighter.Unstoppable) Muscle = Mathf.Min(Muscle, Mathf.Clamp01(strength)); }
 
     public void Land() => squashUntil = Time.time + landingSquashTime;
 
@@ -80,6 +80,7 @@ public class BalanceController : MonoBehaviour
     /// <summary>A blade landed: twist the torso along the blow and snap the head.</summary>
     public void Flinch(Vector2 blowDir, float impact, bool toHead)
     {
+        if (fighter.Unstoppable) return;
         var body = fighter.Body;
         float spin = -Mathf.Sign(blowDir.x); // a blow travelling +x tips the top +x, which is clockwise
         body.Torso.AddTorque(spin * Mathf.Min(impact * flinchPerImpact, maxFlinch), ForceMode2D.Impulse);
@@ -89,6 +90,7 @@ public class BalanceController : MonoBehaviour
     /// <summary>A shield bash: shove the whole body back (it has to catch itself with a step) and rock it.</summary>
     public void Bashed(Vector2 pushDir, float impact)
     {
+        if (fighter.Unstoppable) return;
         float push = Mathf.Min(impact * bashPushPerImpact, maxBashPush);
         Vector2 dir = new Vector2(Mathf.Sign(pushDir.x), 0.25f).normalized;
         foreach (var b in fighter.Body.Bodies) b.AddForce(dir * push * b.mass, ForceMode2D.Impulse);

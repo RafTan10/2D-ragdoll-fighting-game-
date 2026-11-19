@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 0
   legArmor: 1
+  power: 2
+  powerName: Ground Slam
+  powerColor: {r: 1, g: 0.6, b: 0.2, a: 1}
   mainHand: {fileID: 11400000, guid: fb43aa89d2a1d8b44b6cded058fb9b25, type: 2}
   offHand: {fileID: 11400000, guid: fb43aa89d2a1d8b44b6cded058fb9b25, type: 2}

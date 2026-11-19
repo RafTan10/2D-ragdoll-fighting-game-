@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 4
+  powerName: Hotfix
+  powerColor: {r: 0.3, g: 1, b: 0.5, a: 1}
   mainHand: {fileID: 11400000, guid: 148af8af1fb12c64a81b8591462ec2b3, type: 2}
   offHand: {fileID: 11400000, guid: b3343d4cce1940f49a5a384c1948108a, type: 2}

@@ -53,7 +53,7 @@ public class StaminaController : MonoBehaviour
     /// <summary>Spends stamina. Big costs pause recovery for a moment; small ones don't. Faints at zero.</summary>
     public void Spend(float amount)
     {
-        if (amount <= 0f || fighter.IsKnockedOut) return;
+        if (amount <= 0f || fighter.IsKnockedOut || fighter.FreeStamina) return;
         Stamina = Mathf.Max(0f, Stamina - amount);
         if (amount >= 2f) rest = restDelay;
         if (Stamina <= 0f) fighter.Knockdown.Faint();

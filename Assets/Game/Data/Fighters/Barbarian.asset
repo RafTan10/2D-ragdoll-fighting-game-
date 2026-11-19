@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 3
   armArmor: 0
   legArmor: 1
+  power: 1
+  powerName: Berserk
+  powerColor: {r: 1, g: 0.38, b: 0.12, a: 1}
   mainHand: {fileID: 11400000, guid: a67dcf09cc8544845902655910f94613, type: 2}
   offHand: {fileID: 11400000, guid: a377886c5ad5ee347869a178427c822e, type: 2}

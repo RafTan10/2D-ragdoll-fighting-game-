@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 3
+  powerName: Audit
+  powerColor: {r: 0.55, g: 0.85, b: 1, a: 1}
   mainHand: {fileID: 11400000, guid: ac0d223ea108a934b99d6c67b5d9ca7d, type: 2}
   offHand: {fileID: 11400000, guid: 23de5d13423ae884cbbd3f1dccf74faa, type: 2}

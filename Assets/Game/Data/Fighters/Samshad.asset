@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 5
+  powerName: Dark Ward
+  powerColor: {r: 0.62, g: 0.25, b: 0.95, a: 1}
   mainHand: {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
   offHand: {fileID: 11400000, guid: 1aae5549e21ca4d41a8de13d4866e954, type: 2}

@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 2
   armArmor: 1
   legArmor: 2
+  power: 7
+  powerName: Handbag Fury
+  powerColor: {r: 1, g: 0.42, b: 0.72, a: 1}
   mainHand: {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}
   offHand: {fileID: 0}

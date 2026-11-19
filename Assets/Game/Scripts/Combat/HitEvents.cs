@@ -52,6 +52,20 @@ public struct BashInfo
     public float impact;
 }
 
+/// <summary>A fighter fired their super power (Power Mode).</summary>
+public struct PowerInfo
+{
+    public Fighter fighter;
+    /// <summary>Who it was aimed at (the opponent), or null.</summary>
+    public Fighter target;
+    public PowerKind kind;
+    public string name;
+    public Color color;
+    /// <summary>How long it lasts (0 = instant).</summary>
+    public float duration;
+    public Vector2 point;
+}
+
 /// <summary>
 /// The combat event hub. Weapons raise hits and blocks here; effects, sound, camera shake and UI listen, so
 /// detection never plays effects itself and everything reacts to the same hit strength.
@@ -62,6 +76,13 @@ public static class HitEvents
     public static event Action<BlockInfo> Blocked;
     public static event Action<BashInfo> Bashed;
     public static event Action<ArmorBreakInfo> ArmorBroken;
+    public static event Action<PowerInfo> PowerUsed;
+
+    public static void RaisePowerUsed(PowerInfo info)
+    {
+        if (LogHits) Debug.Log($"[Power] {info.fighter.Definition.displayName}: {info.name} ({info.kind})");
+        PowerUsed?.Invoke(info);
+    }
 
     public static void RaiseArmorBroken(ArmorBreakInfo info)
     {

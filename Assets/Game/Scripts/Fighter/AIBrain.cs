@@ -43,6 +43,28 @@ public class AIBrain : IFighterBrain
         seen = memory[0];
     }
 
+    /// <summary>
+    /// Power Mode: fire the super power at a good moment for its kind. Slower difficulties sit on a full meter longer
+    /// (<c>reactionTime × 6</c>: about 3.6 s on Easy, 0.7 s on Hard).
+    /// </summary>
+    bool WantsPower(Fighter self, Fighter opponent, float dist, float reach, float stamina, float now)
+    {
+        var p = self.Powers;
+        if (p == null || !p.Ready || now - p.ReadySince < profile.reactionTime * 6f || opponent.IsKnockedOut) return false;
+        float health = self.Health / self.MaxHealth;
+        bool close = dist < reach * 1.2f, helpless = seen.helpless;
+        switch (p.Kind)
+        {
+            case PowerKind.Shockwave: return dist < 2.2f && !helpless;
+            case PowerKind.Freeze: return close && !helpless;
+            case PowerKind.Dash: return dist > reach * 0.9f && dist < 4f && !helpless;
+            case PowerKind.Fortify: return (close && seen.swinging) || health < 0.45f;
+            case PowerKind.SecondWind: return stamina < 0.35f || health < 0.5f;
+            case PowerKind.None: return false;
+            default: return dist < reach * 1.6f; // Rage, Giant weapon, Flurry: when the fight is on
+        }
+    }
+
     public FighterInput Think(Fighter self, Fighter opponent)
     {
         var input = new FighterInput();
@@ -104,6 +126,7 @@ public class AIBrain : IFighterBrain
         input.move = move;
         input.hop = hop;
         input.jump = jump;
+        input.power = WantsPower(self, opponent, dist, reach, stamina, now);
         hop = jump = false;
         return input;
     }

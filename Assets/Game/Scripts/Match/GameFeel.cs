@@ -42,11 +42,12 @@ public static class GameFeel
 
     // ================================================================ sound
 
-    /// <summary>Flesh hit, armour/metal hit, shield block, fast swing, body hitting the ground, a musical weapon's strum.</summary>
-    public enum Sound { Flesh, Metal, Wood, Whoosh, Thud, Twang }
+    /// <summary>Flesh hit, armour/metal hit, shield block, fast swing, body hitting the ground, a musical weapon's strum,
+    /// a super power firing.</summary>
+    public enum Sound { Flesh, Metal, Wood, Whoosh, Thud, Twang, Power }
 
     static AudioSource source;
-    static AudioClip flesh, metal, wood, whoosh, thud, twang;
+    static AudioClip flesh, metal, wood, whoosh, thud, twang, power;
 
     public static void Play(Sound sound, float volume)
     {
@@ -60,7 +61,7 @@ public static class GameFeel
             BuildClips();
         }
         var clip = sound == Sound.Flesh ? flesh : sound == Sound.Metal ? metal : sound == Sound.Wood ? wood
-                 : sound == Sound.Thud ? thud : sound == Sound.Twang ? twang : whoosh;
+                 : sound == Sound.Thud ? thud : sound == Sound.Twang ? twang : sound == Sound.Power ? power : whoosh;
         source.pitch = Random.Range(0.88f, 1.12f);
         source.PlayOneShot(clip, Mathf.Clamp01(volume));
     }
@@ -111,6 +112,19 @@ public static class GameFeel
             for (int i = delay; i < strumLength; i++) strum[i] += pluck[i - delay] * 0.45f;
         }
         twang = Make("Twang", rate, 0.7f, (t, i) => strum[i]);
+
+        // Power up: a rising, wobbling chord (root + fifth + octave) over a low boom.
+        float phase = 0f;
+        power = Make("Power", rate, 0.9f, (t, i) =>
+        {
+            float f = Mathf.Lerp(160f, 520f, Mathf.Sqrt(Mathf.Clamp01(t / 0.6f)));
+            phase += f / rate;
+            float chord = Mathf.Sin(2f * Mathf.PI * phase) + 0.6f * Mathf.Sin(2f * Mathf.PI * phase * 1.5f) + 0.4f * Mathf.Sin(2f * Mathf.PI * phase * 2f);
+            float wobble = 0.75f + 0.25f * Mathf.Sin(2f * Mathf.PI * 14f * t);
+            float env = Mathf.Min(1f, t / 0.04f) * Mathf.Exp(-Mathf.Max(0f, t - 0.45f) * 7f);
+            float boom = Mathf.Sin(2f * Mathf.PI * (70f - t * 40f) * t) * Mathf.Exp(-t * 8f);
+            return chord * 0.22f * wobble * env + boom * 0.6f;
+        });
     }
 
     /// <summary>Karplus–Strong plucked string: a burst of noise fed through a short, slowly decaying delay line.</summary>

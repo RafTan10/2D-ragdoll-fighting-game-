@@ -14,9 +14,10 @@ using UnityEngine.InputSystem;
 ///
 /// Local 2-player (<see cref="Seat"/>): the keyboard is split and each player gets their own gamepad; mouse, touch
 /// and the on-screen buttons are off.
-///   Player 1: A back, D forward, W jump, Left Shift lunge, F left hand, G right hand; first gamepad.
+///   Player 1: A back, D forward, W jump, Left Shift lunge, F left hand, G right hand, Q super power; first gamepad.
 ///   Player 2: → back, ← forward (mirrors P1, who starts on the left), ↑ jump, Right Shift lunge, K left hand,
-///             L right hand (or numpad 1 / 2); second gamepad.
+///             L right hand (or numpad 1 / 2), Right Ctrl / numpad 3 super power; second gamepad.
+/// Super power (Power Mode) solo: E, gamepad Y (north), or the on-screen POWER button.
 /// </summary>
 public class PlayerBrain : IFighterBrain
 {
@@ -61,6 +62,7 @@ public class PlayerBrain : IFighterBrain
             if (keyboard.dKey.isPressed) input.move += self.Facing;
             input.jump |= keyboard.wKey.wasPressedThisFrame;
             input.hop |= keyboard.leftShiftKey.wasPressedThisFrame;
+            input.power |= keyboard.qKey.wasPressedThisFrame;
             offAction |= keyboard.fKey.isPressed;
             mainAction |= keyboard.gKey.isPressed;
         }
@@ -70,6 +72,7 @@ public class PlayerBrain : IFighterBrain
             if (keyboard.leftArrowKey.isPressed) input.move += self.Facing;
             input.jump |= keyboard.upArrowKey.wasPressedThisFrame;
             input.hop |= keyboard.rightShiftKey.wasPressedThisFrame;
+            input.power |= keyboard.rightCtrlKey.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame;
             offAction |= keyboard.kKey.isPressed || keyboard.numpad1Key.isPressed;
             mainAction |= keyboard.lKey.isPressed || keyboard.numpad2Key.isPressed;
         }
@@ -80,6 +83,7 @@ public class PlayerBrain : IFighterBrain
             if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) input.move += self.Facing;
             input.jump |= keyboard.spaceKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame;
             input.hop |= keyboard.leftShiftKey.wasPressedThisFrame;
+            input.power |= keyboard.eKey.wasPressedThisFrame;
             mainAction |= keyboard.jKey.isPressed;
             offAction |= keyboard.kKey.isPressed;
         }
@@ -103,6 +107,7 @@ public class PlayerBrain : IFighterBrain
             input.move += pad.dpad.ReadValue().x;
             input.jump |= pad.buttonSouth.wasPressedThisFrame;
             input.hop |= pad.buttonEast.wasPressedThisFrame;
+            input.power |= pad.buttonNorth.wasPressedThisFrame;
             mainAction |= pad.rightTrigger.isPressed;
             offAction |= pad.leftTrigger.isPressed;
         }
@@ -137,6 +142,7 @@ public class PlayerBrain : IFighterBrain
             if (buttons.MoveLeft) input.move -= 1f;
             if (buttons.MoveRight) input.move += 1f;
             input.jump |= buttons.JumpPressed;
+            input.power |= buttons.PowerPressed;
             mainAction |= buttons.MainHeld;
             offAction |= buttons.OffHeld;
         }

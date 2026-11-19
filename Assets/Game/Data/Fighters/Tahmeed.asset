@@ -34,5 +34,8 @@ MonoBehaviour:
   torsoArmor: 1
   armArmor: 1
   legArmor: 1
+  power: 5
+  powerName: Bodyguard
+  powerColor: {r: 0.85, g: 0.9, b: 1, a: 1}
   mainHand: {fileID: 11400000, guid: a377886c5ad5ee347869a178427c822e, type: 2}
   offHand: {fileID: 11400000, guid: 1aae5549e21ca4d41a8de13d4866e954, type: 2}

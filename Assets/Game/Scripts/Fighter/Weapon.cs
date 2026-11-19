@@ -223,17 +223,29 @@ public class Weapon : MonoBehaviour
                     * part.damageMultiplier
                     * owner.Definition.strength
                     * owner.DamageMultiplier
+                    * owner.BuffDamage
                     * (offHandWeapon ? OffHandShare : 1f);
-        // Armour takes the blow first and wears down; what gets through hurts the body (× the victim's difficulty
-        // handicap), and no single blow takes more than MaxHitShare of their health.
-        float damage = part.fighter.Armor.Absorb(part, raw, out float armorWear, out bool armoured) * part.fighter.DamageTaken;
-        damage = Mathf.Min(damage, part.fighter.MaxHealth * MaxHitShare);
 
         lastHitOn[collision.collider] = Time.time;
         if (swing) strikeSpent = true;
+        float damage = ApplyBlow(owner, part, definition, raw, impact, point, dir, MaxHitShare);
         StatHits++;
         StatDamage += damage;
         StatImpact += impact;
+    }
+
+    /// <summary>
+    /// Everything that follows a blow that landed — used by weapons and by super powers. Armour takes the blow first
+    /// and wears down; what gets through hurts the body (× the victim's difficulty handicap and power defence), and no
+    /// single blow takes more than <paramref name="capShare"/> of their health. Then knockback, stagger, flinch, the
+    /// Hit event, and the damage. Returns the damage dealt.
+    /// </summary>
+    public static float ApplyBlow(Fighter attacker, BodyPart part, WeaponDefinition weapon, float raw, float impact,
+                                  Vector2 point, Vector2 dir, float capShare)
+    {
+        var victim = part.fighter;
+        float damage = victim.Armor.Absorb(part, raw, out float armorWear, out bool armoured) * victim.DamageTaken * victim.BuffDefense;
+        damage = Mathf.Min(damage, victim.MaxHealth * capShare);
 
         var strength = impact >= ReferenceImpact * HeavyAt ? HitStrength.Heavy
                      : impact >= ReferenceImpact * MediumAt ? HitStrength.Medium
@@ -242,16 +254,17 @@ public class Weapon : MonoBehaviour
         // Physical consequences: knock the struck part along the blow, and rock the victim's balance.
         var rb = part.GetComponent<Rigidbody2D>();
         if (rb != null) rb.AddForce(dir * Mathf.Min(impact * KnockbackScale, MaxKnockback), ForceMode2D.Impulse);
-        if (strength == HitStrength.Heavy) part.fighter.Balance.Stagger(HeavyStagger);
-        else if (strength == HitStrength.Medium) part.fighter.Balance.Stagger(MediumStagger);
-        part.fighter.Balance.Flinch(dir, impact, part.kind == PartKind.Head);
+        if (strength == HitStrength.Heavy) victim.Balance.Stagger(HeavyStagger);
+        else if (strength == HitStrength.Medium) victim.Balance.Stagger(MediumStagger);
+        victim.Balance.Flinch(dir, impact, part.kind == PartKind.Head);
 
         HitEvents.RaiseHit(new HitInfo
         {
-            attacker = owner, victim = part.fighter, part = part, weapon = definition, damage = damage, impact = impact,
+            attacker = attacker, victim = victim, part = part, weapon = weapon, damage = damage, impact = impact,
             point = point, direction = dir, strength = strength, armoured = armoured, armorWear = armorWear
         });
-        part.fighter.TakeDamage(damage, part);
+        victim.TakeDamage(damage, part);
+        return damage;
     }
 
     /// <summary>

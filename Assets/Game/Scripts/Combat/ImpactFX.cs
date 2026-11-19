@@ -29,6 +29,13 @@ public class ImpactFX : MonoBehaviour
         Spawn(ring, point, 0f, size * 0.35f, size * 1.05f, 0.14f, new Color(0.95f, 0.9f, 0.75f, 0.6f));
     }
 
+    /// <summary>A coloured ring growing to <paramref name="size"/> (a super power going off, a shockwave).</summary>
+    public static void Ring(Vector2 point, float size, Color color, float seconds)
+    {
+        EnsureSprites();
+        Spawn(ring, point, 0f, size * 0.2f, size, seconds, color);
+    }
+
     static void Spawn(Sprite sprite, Vector2 point, float angle, float from, float to, float seconds, Color color)
     {
         var go = new GameObject("Impact");
