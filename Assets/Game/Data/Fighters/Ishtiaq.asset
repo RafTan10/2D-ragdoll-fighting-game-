@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Ishtiaq
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Ishtiaq
+  stock: 0
+  tagline: 'the bodybuilder: curls you into the floor'
   head: {fileID: 21300000, guid: c09c803096cc22043b4c908c1c968b1a, type: 3}
   torso: {fileID: 21300000, guid: 47e475dc653c648488b8e3b1a42f9c3d, type: 3}
   upperArm: {fileID: 21300000, guid: 5a1dcad7e8f41fe48bf6b93da873fb9a, type: 3}

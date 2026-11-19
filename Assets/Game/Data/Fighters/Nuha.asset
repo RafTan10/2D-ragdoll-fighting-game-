@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Nuha
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Nuha
+  stock: 0
+  tagline: quick on her feet; the bag swings along
   head: {fileID: 21300000, guid: e51e2a172af3a894880ea6e05a18d895, type: 3}
   torso: {fileID: 21300000, guid: 6e3d5891106c401439e6e241b43be4e5, type: 3}
   upperArm: {fileID: 21300000, guid: 5c055866340d1fb4abcf272ab92353f8, type: 3}

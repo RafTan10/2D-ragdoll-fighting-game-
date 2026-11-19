@@ -8,6 +8,10 @@ public enum ArmorMaterial { Skin, Cloth, Leather, Mail, Plate }
 public class FighterDefinition : ScriptableObject
 {
     public string displayName = "Fighter";
+    [Tooltip("One of the game's stock characters (Knight, Barbarian, Ronin). Custom fighters are listed before them.")]
+    public bool stock;
+    [Tooltip("Short line shown under the name in the menu (who they are / how they fight).")]
+    public string tagline;
 
     [Header("Body sprites (one arm / one leg, reused for both sides)")]
     public Sprite head;

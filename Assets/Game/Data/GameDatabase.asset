@@ -13,9 +13,6 @@ MonoBehaviour:
   m_Name: GameDatabase
   m_EditorClassIdentifier: Assembly-CSharp::GameDatabase
   fighters:
-  - {fileID: 11400000, guid: cfd1370d96adacd4d87351098b301f94, type: 2}
-  - {fileID: 11400000, guid: efcf27f7bdded184cbbaf37959cc892b, type: 2}
-  - {fileID: 11400000, guid: 6208edb196414ee40bcb83012946c999, type: 2}
   - {fileID: 11400000, guid: 896a9fa894b2b53459a996226b646284, type: 2}
   - {fileID: 11400000, guid: 2fb27168fe4085d44a552b51ad93ddea, type: 2}
   - {fileID: 11400000, guid: e04966b1960770b489fd0cfa1fef78a5, type: 2}
@@ -29,6 +26,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 67a6c5be256f89745ad4c9c97bbc66e2, type: 2}
   - {fileID: 11400000, guid: 49391860d6896144f880de1669590692, type: 2}
   - {fileID: 11400000, guid: 033cbc864394a8248864dec5e6c54d19, type: 2}
+  - {fileID: 11400000, guid: cfd1370d96adacd4d87351098b301f94, type: 2}
+  - {fileID: 11400000, guid: efcf27f7bdded184cbbaf37959cc892b, type: 2}
+  - {fileID: 11400000, guid: 6208edb196414ee40bcb83012946c999, type: 2}
   weapons:
   - {fileID: 11400000, guid: 1916c04ff1a54ba4093e3dec4865e7bb, type: 2}
   - {fileID: 11400000, guid: 2aada5b6bb4e4e14e8eafbc925c500e8, type: 2}

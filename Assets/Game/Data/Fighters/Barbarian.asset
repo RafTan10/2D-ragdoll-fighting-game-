@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Barbarian
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Barbarian
+  stock: 1
+  tagline: heavy hitter, two weapons, 120 health
   head: {fileID: 21300000, guid: 786aafcd1406b4442b264b2aef52e9b4, type: 3}
   torso: {fileID: 21300000, guid: d3f639ae10962dd478399f288bb64ea3, type: 3}
   upperArm: {fileID: 21300000, guid: ba55017736a7382409cf07691132479f, type: 3}

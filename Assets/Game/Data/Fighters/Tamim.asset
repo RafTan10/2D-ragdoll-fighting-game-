@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Tamim
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Tamim
+  stock: 0
+  tagline: 'the lumberjack: heavy chops, knife up close'
   head: {fileID: 21300000, guid: 8d6b9f5759b285a4d92711c2a205a0ae, type: 3}
   torso: {fileID: 21300000, guid: e686536768910434eb100f5ccf3001b3, type: 3}
   upperArm: {fileID: 21300000, guid: bb823fe3c9984a347acb6822af5e30b2, type: 3}

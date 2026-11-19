@@ -11,28 +11,69 @@ using UnityEngine.InputSystem;
 ///   or drag on the right / left half of a touchscreen.
 /// Movement — keyboard A = step back, D = step forward (relative to where you face), Space/W jump, Shift lunge;
 ///   on-screen &lt; &gt; and JUMP; gamepad d-pad, A/south jump, B/east lunge; touch double-tap lunge.
+///
+/// Local 2-player (<see cref="Seat"/>): the keyboard is split and each player gets their own gamepad; mouse, touch
+/// and the on-screen buttons are off.
+///   Player 1: A back, D forward, W jump, Left Shift lunge, F left hand, G right hand; first gamepad.
+///   Player 2: → back, ← forward (mirrors P1, who starts on the left), ↑ jump, Right Shift lunge, K left hand,
+///             L right hand (or numpad 1 / 2); second gamepad.
 /// </summary>
 public class PlayerBrain : IFighterBrain
 {
+    public enum Seat { Solo, Player1, Player2 }
+
     const float TouchStickRadius = 110f;   // pixels of drag for a fully stretched arm
     const float StickDeadZone = 0.25f;
     const float SwingWindUp = 0.2f;
 
+    readonly Seat seat;
     float lastTapTime = -10f;
     readonly Vector2[] touchStart = new Vector2[10];
     readonly SwingMove mainSwing = new SwingMove(), offSwing = new SwingMove();
     int mainSwingCount, offSwingCount;
     bool mainWasPressed, offWasPressed;
 
+    public PlayerBrain(Seat seat = Seat.Solo) { this.seat = seat; }
+
+    /// <summary>The gamepad for this seat: any pad when solo, otherwise the first / second one connected.</summary>
+    Gamepad Pad
+    {
+        get
+        {
+            if (seat == Seat.Solo) return Gamepad.current;
+            int i = seat == Seat.Player1 ? 0 : 1;
+            return Gamepad.all.Count > i ? Gamepad.all[i] : null;
+        }
+    }
+
     public FighterInput Think(Fighter self, Fighter opponent)
     {
         var input = new FighterInput();
         float mainReach = self.MainHand.Reach, offReach = self.OffHand.Reach;
-        var buttons = OnScreenControls.Current;
+        bool solo = seat == Seat.Solo;
+        var buttons = solo ? OnScreenControls.Current : null;
         bool mainAction = false, offAction = false;
 
         var keyboard = Keyboard.current;
-        if (keyboard != null)
+        if (keyboard != null && seat == Seat.Player1)
+        {
+            if (keyboard.aKey.isPressed) input.move -= self.Facing;
+            if (keyboard.dKey.isPressed) input.move += self.Facing;
+            input.jump |= keyboard.wKey.wasPressedThisFrame;
+            input.hop |= keyboard.leftShiftKey.wasPressedThisFrame;
+            offAction |= keyboard.fKey.isPressed;
+            mainAction |= keyboard.gKey.isPressed;
+        }
+        else if (keyboard != null && seat == Seat.Player2)
+        {
+            if (keyboard.rightArrowKey.isPressed) input.move -= self.Facing;
+            if (keyboard.leftArrowKey.isPressed) input.move += self.Facing;
+            input.jump |= keyboard.upArrowKey.wasPressedThisFrame;
+            input.hop |= keyboard.rightShiftKey.wasPressedThisFrame;
+            offAction |= keyboard.kKey.isPressed || keyboard.numpad1Key.isPressed;
+            mainAction |= keyboard.lKey.isPressed || keyboard.numpad2Key.isPressed;
+        }
+        else if (keyboard != null)
         {
             // A / D are back / forward relative to the way the fighter faces.
             if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) input.move -= self.Facing;
@@ -45,7 +86,7 @@ public class PlayerBrain : IFighterBrain
 
         var mouse = Mouse.current;
         var cam = Camera.main;
-        if (mouse != null && cam != null)
+        if (solo && mouse != null && cam != null)
         {
             Vector2 cursor = cam.ScreenToWorldPoint(mouse.position.ReadValue());
             bool onButtons = buttons != null && buttons.MouseCaptured;
@@ -53,7 +94,7 @@ public class PlayerBrain : IFighterBrain
             if (mouse.rightButton.isPressed) Set(ref input.offActive, ref input.offAim, cursor - self.OffHand.ShoulderPosition);
         }
 
-        var pad = Gamepad.current;
+        var pad = Pad;
         if (pad != null)
         {
             Vector2 right = pad.rightStick.ReadValue(), left = pad.leftStick.ReadValue();
@@ -66,7 +107,7 @@ public class PlayerBrain : IFighterBrain
             offAction |= pad.leftTrigger.isPressed;
         }
 
-        var touchscreen = Touchscreen.current;
+        var touchscreen = solo ? Touchscreen.current : null;
         if (touchscreen != null)
         {
             var touches = touchscreen.touches;

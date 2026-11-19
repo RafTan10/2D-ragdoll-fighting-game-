@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Tahseen
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Tahseen
+  stock: 0
+  tagline: strums a chord every time it connects
   head: {fileID: 21300000, guid: 9053f268fde855a47924bc772da79e9c, type: 3}
   torso: {fileID: 21300000, guid: f384462f4f69fe6488f5715ab765abd6, type: 3}
   upperArm: {fileID: 21300000, guid: 20989c993046bc34cb59667336c1b3bb, type: 3}

@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Tanim
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Tanim
+  stock: 0
+  tagline: 'the strongest: biker jacket, red shades'
   head: {fileID: 21300000, guid: 466045e365bb9a1448b95a568dbe683b, type: 3}
   torso: {fileID: 21300000, guid: 778ff6647568f724b94806c0d67be948, type: 3}
   upperArm: {fileID: 21300000, guid: efef2d08738b2d544a6a226818f5623b, type: 3}

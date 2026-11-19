@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Alavi
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Alavi
+  stock: 0
+  tagline: 'the hiker: long reach, never out of breath'
   head: {fileID: 21300000, guid: 74482dadfeade3f4faf23de87e45ea8e, type: 3}
   torso: {fileID: 21300000, guid: 6080e481464322c43a94a551fff43916, type: 3}
   upperArm: {fileID: 21300000, guid: 3728d61e905ead3459b3e42ee68a740c, type: 3}

@@ -219,6 +219,19 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
       Tanim 21/4/4 of 29, Samshad vs Tahmeed 23/22/20 of 65 (≈45% hits, blocks now only from raised guards, zero
       "touched but no damage" swings). Rounds: KvB 33–62 s, Hamza vs Tanim 15–21 s, Alavi vs Ishtiaq 19–27 s.
       Not yet felt with real mouse/keyboard (Editor unfocused).
+- [x] **Local 2-player** (same keyboard, a gamepad each): `MatchManager.twoPlayer` → both fighters get
+      `PlayerBrain(Seat.Player1 / Player2)`; no AI, no difficulty handicaps (full hitboxes, ×1 damage), on-screen
+      buttons, mouse and touch off. P1: A/D (back/forward), W jump, LShift lunge, F left hand, G right hand, `Gamepad.all[0]`.
+      P2: →/← (back/forward, mirrors P1), ↑ jump, RShift lunge, K left hand, L right hand (or numpad 1/2), `Gamepad.all[1]`.
+      Solo keeps every input (`Seat.Solo`). Verified by feeding keyboard states to both brains (live key presses don't
+      reach Play mode while the Editor is unfocused); not yet played by two people.
+- [x] **Landing menu** redesign (still IMGUI, `MatchManager.DrawSelect` + `MenuArt`): the chosen arena as the backdrop,
+      mode tabs (1 PLAYER vs CPU / 2 PLAYERS, Tab), two fighter cards (full-body portrait in a guard pose assembled
+      from the part sprites, name, `FighterDefinition.tagline`, loadout, HEALTH / POWER / SPEED / ARMOUR bars, < >),
+      VS + arena / difficulty steppers + FIGHT!, a roster strip of heads (click = left, right-click = right).
+      Menu keys: A/D left fighter, ←/→ right fighter, Tab mode, Enter fight. **Friends first:** stock fighters
+      (`FighterDefinition.stock` = Knight, Barbarian, Ronin) sit at the end of `GameDatabase.fighters`;
+      `ContentTools.CreateFighter` inserts new fighters before the first stock one.
 
 ### Phase 2 — Weapons & armour depth
 - [ ] Armour slots (head/body/legs) that reduce damage, shown as overlay sprites
@@ -229,7 +242,7 @@ contact point (tip hurts most), double-tap steps. User's decisions: PC hands fol
 ### Phase 3 — Modes & menus (replace IMGUI placeholders with uGUI/UI Toolkit)
 - [ ] Main menu, loadout screen
 - [ ] Campaign: list of levels, escalating AI, 3 stars (speed + damage taken), bosses
-- [ ] Practice mode, local 2-player on one device
+- [ ] Practice mode; 2-player on one touchscreen (keyboard/gamepad 2-player is done — see Phase 1c)
 
 ### Phase 4 — Progression
 - [ ] Coins, shop, unlocks, save data
@@ -251,7 +264,8 @@ Assets/Game/
                      BodyPart, Weapon (hit detection + damage), HandMoves (SwingMove, BlockAim), FighterInput,
                      PlayerBrain, AIBrain, ScriptBrain (tests)
   Scripts/Combat/    HitEvents (Hit / Blocked events), HitFeedback (effects, sound, hit-stop, camera trauma)
-  Scripts/Match/     MatchManager (best-of-3 rounds + IMGUI HUD/select screen), OnScreenControls, GameFeel (time scale, sounds),
+  Scripts/Match/     MatchManager (best-of-3 rounds + IMGUI HUD/select screen), MenuArt (menu portraits, heads, arena
+                     backdrop), OnScreenControls, GameFeel (time scale, sounds),
                      ArenaView, CameraRig, BloodFX (blood/sparks/dust), RainFX, HitboxOverlay
   Editor/            PixelArtImporter, ContentTools (add fighter/weapon/arena), PlaceholderArt, GameSceneBuilder,
                      FighterBuilder/ (FighterParts library, FighterBuilder core + FighterRecipe, FighterBuilderWindow)
@@ -332,6 +346,9 @@ docs/                Ragdoll_Style_Guide.md (how to make fighters from photos)
 | Blood Off / Low / Normal | — | `B` | — |
 | Log every hit to the Console | — | `F3` | — |
 | Restart / menu | — | `R` / `Esc` | — |
+
+2-player (menu: **2 PLAYERS** / Tab): P1 A/D · W · LShift · F (left hand) · G (right hand) · gamepad 1;
+P2 →/← · ↑ · RShift · K · L (numpad 1/2) · gamepad 2. Menu: A/D left fighter, ←/→ right fighter, Enter fight.
 
 Swings alternate an overhead chop and a side slash. On a touchscreen, holding/dragging anywhere that isn't a
 button also free-aims (right half = right hand), and a double-tap lunges.

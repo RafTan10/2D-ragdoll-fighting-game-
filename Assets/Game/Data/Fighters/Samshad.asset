@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Samshad
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Samshad
+  stock: 0
+  tagline: 'the goth: blocks everything, bashes back'
   head: {fileID: 21300000, guid: c7ed2b8b52537d940bcb6fbaf9081f68, type: 3}
   torso: {fileID: 21300000, guid: 8d613a7b40550db439c4ae5fda8f1804, type: 3}
   upperArm: {fileID: 21300000, guid: f1771daadaa987b40ad8e80a6c1e9ac0, type: 3}

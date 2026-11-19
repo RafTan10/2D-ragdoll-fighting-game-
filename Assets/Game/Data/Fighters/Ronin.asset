@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Ronin
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Ronin
+  stock: 1
+  tagline: lacquered plate, two blades
   head: {fileID: 21300000, guid: 26b068f757ca06b4dbf9f48dc439d595, type: 3}
   torso: {fileID: 21300000, guid: 3d576de5405068743bbdcd0a27285c26, type: 3}
   upperArm: {fileID: 21300000, guid: 76b8944eaa8ac3a479491128f012ce0b, type: 3}
@@ -20,6 +22,8 @@ MonoBehaviour:
   upperLeg: {fileID: 21300000, guid: 4b4a102adacd1af42b97436c817d6c43, type: 3}
   lowerLeg: {fileID: 21300000, guid: d017d4572b6989d4d8664b6d3e7f373d, type: 3}
   cape: {fileID: 0}
+  skirt: {fileID: 0}
+  handProp: {fileID: 0}
   maxHealth: 90
   strength: 1
   walkSpeed: 2.5

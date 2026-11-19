@@ -14,6 +14,8 @@ public class MatchManager : MonoBehaviour
     public int opponentIndex = 1;
     public int arenaIndex;
     public int difficultyIndex = 1;
+    [Tooltip("Local 2-player: both fighters are humans sharing the keyboard (and one gamepad each). No AI, no difficulty handicaps.")]
+    public bool twoPlayer;
 
     [Tooltip("Skip the select screen and fight straight away (handy for testing).")]
     public bool autoStart;
@@ -83,17 +85,26 @@ public class MatchManager : MonoBehaviour
         arenaObject = ArenaView.Build(arena, mat);
         if (arena.rain) RainFX.Create(mat).transform.SetParent(arenaObject.transform, true);
 
-        player = Fighter.Spawn(playerDef, playerDef.mainHand, playerDef.offHand, new Vector2(-SpawnX, 0f), 1f, 0, mat, ai.playerHitboxWidth);
+        // 2-player: an even fight — full hitboxes, no damage handicaps either way.
+        player = Fighter.Spawn(playerDef, playerDef.mainHand, playerDef.offHand, new Vector2(-SpawnX, 0f), 1f, 0, mat, twoPlayer ? 1f : ai.playerHitboxWidth);
         enemy = Fighter.Spawn(enemyDef, enemyDef.mainHand, enemyDef.offHand, new Vector2(SpawnX, 0f), -1f, 20, mat);
         SetupCamera(arena);
         player.Opponent = enemy;
         enemy.Opponent = player;
-        player.Brain = new PlayerBrain();
-        enemy.Brain = new AIBrain(ai);
-        enemy.DamageMultiplier = ai.damageMultiplier;
-        enemy.TouchesHurt = ai.touchesHurt;
-        player.DamageTaken = ai.playerDamageTaken;
-        player.DamageMultiplier = ai.playerDamageDealt;
+        if (twoPlayer)
+        {
+            player.Brain = new PlayerBrain(PlayerBrain.Seat.Player1);
+            enemy.Brain = new PlayerBrain(PlayerBrain.Seat.Player2);
+        }
+        else
+        {
+            player.Brain = new PlayerBrain();
+            enemy.Brain = new AIBrain(ai);
+            enemy.DamageMultiplier = ai.damageMultiplier;
+            enemy.TouchesHurt = ai.touchesHurt;
+            player.DamageTaken = ai.playerDamageTaken;
+            player.DamageMultiplier = ai.playerDamageDealt;
+        }
         player.KnockedOut += OnKnockedOut;
         enemy.KnockedOut += OnKnockedOut;
 
@@ -101,7 +112,7 @@ public class MatchManager : MonoBehaviour
 
         if (controls == null) controls = gameObject.AddComponent<OnScreenControls>();
         controls.player = player;
-        controls.enabled = showOnScreenControls;
+        controls.enabled = showOnScreenControls && !twoPlayer; // one set of buttons can't serve two players
     }
 
     void OnKnockedOut(Fighter loser)
@@ -110,6 +121,7 @@ public class MatchManager : MonoBehaviour
         bool playerWon = loser == enemy;
         if (playerWon) playerScore++; else enemyScore++;
         string winner = (playerWon ? player : enemy).Definition.displayName;
+        if (twoPlayer) winner = (playerWon ? "P1 " : "P2 ") + winner;
         bool matchWon = playerScore >= roundsToWin || enemyScore >= roundsToWin;
         roundMessage = matchWon ? winner + " wins the match!" : winner + " wins the round";
         state = matchWon ? State.MatchOver : State.RoundOver;
@@ -147,7 +159,17 @@ public class MatchManager : MonoBehaviour
             state = State.Select;
             if (controls != null) controls.enabled = false;
         }
-        if (state == State.Select && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) StartMatch();
+        if (state == State.Select)
+        {
+            // Menu keys: A / D change the left fighter, ← / → the right one, Tab switches mode, Enter fights.
+            int n = database.fighters.Count;
+            if (kb.aKey.wasPressedThisFrame) playerIndex = Wrap(playerIndex - 1, n);
+            if (kb.dKey.wasPressedThisFrame) playerIndex = Wrap(playerIndex + 1, n);
+            if (kb.leftArrowKey.wasPressedThisFrame) opponentIndex = Wrap(opponentIndex - 1, n);
+            if (kb.rightArrowKey.wasPressedThisFrame) opponentIndex = Wrap(opponentIndex + 1, n);
+            if (kb.tabKey.wasPressedThisFrame) twoPlayer = !twoPlayer;
+            if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) StartMatch();
+        }
     }
 
     void Cleanup()
@@ -197,44 +219,184 @@ public class MatchManager : MonoBehaviour
         else DrawHud(w);
     }
 
+    // ---------------------------------------------------------------- landing menu
+
+    static readonly Color Gold = new Color(0.93f, 0.74f, 0.3f);
+    static readonly Color P1Color = new Color(0.38f, 0.64f, 1f);
+    static readonly Color P2Color = new Color(0.96f, 0.38f, 0.32f);
+    static readonly Color PanelColor = new Color(0.05f, 0.04f, 0.05f, 0.78f);
+
+    GUIStyle Style(int size, FontStyle fs = FontStyle.Normal, TextAnchor a = TextAnchor.MiddleCenter, Color? c = null)
+    {
+        var s = new GUIStyle(GUI.skin.label) { fontSize = size, fontStyle = fs, alignment = a, wordWrap = false, clipping = TextClipping.Overflow };
+        s.normal.textColor = c ?? Color.white;
+        return s;
+    }
+
+    void Shadowed(Rect r, string text, GUIStyle s)
+    {
+        var col = s.normal.textColor;
+        s.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
+        GUI.Label(new Rect(r.x + 2, r.y + 2, r.width, r.height), text, s);
+        s.normal.textColor = col;
+        GUI.Label(r, text, s);
+    }
+
+    /// <summary>A flat button: dark, outlined in <paramref name="accent"/>, filled with it when lit (selected or hovered).</summary>
+    bool FlatButton(Rect r, string text, Color accent, bool selected, int size = 15)
+    {
+        bool hover = r.Contains(Event.current.mousePosition);
+        MenuArt.Fill(r, selected ? new Color(accent.r, accent.g, accent.b, 0.85f) : hover ? new Color(accent.r, accent.g, accent.b, 0.35f) : PanelColor);
+        MenuArt.Frame(r, new Color(accent.r, accent.g, accent.b, selected || hover ? 1f : 0.6f));
+        GUI.Label(r, text, Style(size, FontStyle.Bold, TextAnchor.MiddleCenter, selected ? new Color(0.08f, 0.06f, 0.06f) : Color.white));
+        return GUI.Button(r, GUIContent.none, GUIStyle.none);
+    }
+
+    int Wrap(int i, int count) => count == 0 ? 0 : ((i % count) + count) % count;
+
     void DrawSelect(float w)
     {
-        GUI.color = new Color(0f, 0f, 0f, 0.75f);
-        GUI.DrawTexture(new Rect(0, 0, w, 540), Texture2D.whiteTexture);
-        GUI.color = Color.white;
+        const float h = 540f;
+        var arena = Pick(database.arenas, arenaIndex);
+        MenuArt.Arena(new Rect(0, 0, w, h), arena);
+        MenuArt.Fill(new Rect(0, 0, w, h), new Color(0.03f, 0.02f, 0.03f, 0.45f));
+        MenuArt.Fill(new Rect(0, 0, w, 120), new Color(0f, 0f, 0f, 0.35f));
+        MenuArt.Fill(new Rect(0, h - 92, w, 92), new Color(0f, 0f, 0f, 0.55f));
 
-        GUI.Label(new Rect(0, 50, w, 50), "RAGDOLL DUEL", big);
-        float x = w * 0.5f - 200f, y = 140f;
-        playerIndex = Selector(x, ref y, "Your fighter", database.fighters, playerIndex, f => f.displayName + Loadout(f));
-        opponentIndex = Selector(x, ref y, "Opponent", database.fighters, opponentIndex, f => f.displayName + Loadout(f));
-        arenaIndex = Selector(x, ref y, "Arena", database.arenas, arenaIndex, a => a.displayName);
-        difficultyIndex = Selector(x, ref y, "Difficulty", database.aiProfiles, difficultyIndex, p => p.displayName);
+        // Title + mode tabs
+        Shadowed(new Rect(0, 10, w, 56), "RAGDOLL DUEL", Style(46, FontStyle.Bold, TextAnchor.MiddleCenter, Gold));
+        GUI.Label(new Rect(0, 58, w, 22), "physics duels starring real people", Style(14, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.8f)));
+        if (FlatButton(new Rect(w * 0.5f - 196, 86, 190, 30), "1 PLAYER  vs  CPU", Gold, !twoPlayer)) twoPlayer = false;
+        if (FlatButton(new Rect(w * 0.5f + 6, 86, 190, 30), "2 PLAYERS", Gold, twoPlayer)) twoPlayer = true;
 
-        if (GUI.Button(new Rect(w * 0.5f - 100f, y + 20f, 200f, 50f), "FIGHT  (Enter)")) StartMatch();
+        int n = database.fighters.Count;
+        playerIndex = Wrap(playerIndex, n);
+        opponentIndex = Wrap(opponentIndex, n);
 
-        GUI.Label(new Rect(0, 470, w, 60),
-            "J / R button: right hand swings    K / L button: left hand swings (a shield blocks)    A: back   D: forward   Space: jump   Shift: lunge\n" +
-            "Free aim: hold left / right mouse.   H: hitboxes   B: blood off/low/normal   F3: log hits   R: restart round   Esc: menu", center);
+        // Fighter cards
+        float cardW = Mathf.Min(300f, (w - 300f) * 0.5f - 20f);
+        playerIndex = FighterCard(new Rect(20, 126, cardW, 318), playerIndex, twoPlayer ? "PLAYER 1" : "YOU", P1Color, false, "A / D");
+        opponentIndex = FighterCard(new Rect(w - 20 - cardW, 126, cardW, 318), opponentIndex, twoPlayer ? "PLAYER 2" : "CPU", P2Color, true, "← / →");
+
+        // Middle column: VS, arena, difficulty, FIGHT
+        float cx = w * 0.5f;
+        Shadowed(new Rect(cx - 80, 150, 160, 70), "VS", Style(56, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white));
+        arenaIndex = Stepper(new Rect(cx - 130, 240, 260, 34), "ARENA", database.arenas, arenaIndex, a => a.displayName);
+        if (!twoPlayer) difficultyIndex = Stepper(new Rect(cx - 130, 300, 260, 34), "DIFFICULTY", database.aiProfiles, difficultyIndex, p => p.displayName);
+        else GUI.Label(new Rect(cx - 130, 300, 260, 34), "even fight · no handicaps", Style(13, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.75f)));
+        if (FlatButton(new Rect(cx - 110, 362, 220, 54), "FIGHT!", Gold, true, 26)) StartMatch();
+        GUI.Label(new Rect(cx - 110, 416, 220, 20), "Enter", Style(12, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.6f)));
+
+        RosterStrip(w, 462f);
+
+        // Controls for the chosen mode
+        var hint = Style(12, FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.85f));
+        string keys = twoPlayer
+            ? "<color=#7fb0ff>P1</color>  A / D move · W jump · L-Shift lunge · F left hand · G right hand · gamepad 1        " +
+              "<color=#ff7a6e>P2</color>  ← / → move · ↑ jump · R-Shift lunge · K left hand · L right hand · gamepad 2"
+            : "J / K  right / left hand (weapons swing, shields block) · A / D back / forward · Space jump · Shift lunge · hold mouse buttons to aim freely";
+        hint.richText = true;
+        GUI.Label(new Rect(0, h - 36, w, 18), keys, hint);
+        GUI.Label(new Rect(0, h - 19, w, 18), "Tab: switch mode · H hitboxes · B blood · R restart round · Esc menu", hint);
     }
 
-    static string Loadout(FighterDefinition f)
+    /// <summary>One side's fighter: header, full-body portrait, name, tagline, loadout, stat bars, prev / next.</summary>
+    int FighterCard(Rect r, int index, string header, Color accent, bool faceLeft, string keyHint)
     {
-        string main = f.mainHand != null ? f.mainHand.displayName : "Fist";
-        string off = f.offHand != null ? f.offHand.displayName : "Fist";
-        return "  (" + main + " + " + off + ")";
-    }
+        int n = database.fighters.Count;
+        var def = n > 0 ? database.fighters[index] : null;
+        MenuArt.Fill(r, PanelColor);
+        MenuArt.Fill(new Rect(r.x, r.y, r.width, 26), new Color(accent.r, accent.g, accent.b, 0.9f));
+        GUI.Label(new Rect(r.x + 10, r.y, r.width - 20, 26), header, Style(15, FontStyle.Bold, TextAnchor.MiddleLeft, new Color(0.06f, 0.05f, 0.05f)));
+        GUI.Label(new Rect(r.x + 10, r.y, r.width - 20, 26), (index + 1) + " / " + n + "   " + keyHint, Style(12, FontStyle.Bold, TextAnchor.MiddleRight, new Color(0.06f, 0.05f, 0.05f, 0.8f)));
+        MenuArt.Frame(r, new Color(accent.r, accent.g, accent.b, 0.8f));
+        if (def == null) return index;
 
-    int Selector<T>(float x, ref float y, string label, System.Collections.Generic.List<T> list, int index, System.Func<T, string> name)
-        where T : Object
-    {
-        int count = Mathf.Max(list.Count, 1);
-        index = ((index % count) + count) % count;
-        GUI.Label(new Rect(x, y, 140, 34), label, normal);
-        if (GUI.Button(new Rect(x + 140, y, 34, 34), "<")) index = (index - 1 + count) % count;
-        GUI.Label(new Rect(x + 180, y, 186, 34), list.Count > 0 ? name(list[index]) : "(none)", center);
-        if (GUI.Button(new Rect(x + 370, y, 34, 34), ">")) index = (index + 1) % count;
-        y += 50f;
+        // Portrait with prev / next arrows either side
+        var stage = new Rect(r.x + 40, r.y + 34, r.width - 80, 140);
+        MenuArt.Fighter(stage, def, faceLeft);
+        if (FlatButton(new Rect(r.x + 8, stage.center.y - 20, 28, 40), "<", accent, false, 18)) index = Wrap(index - 1, n);
+        if (FlatButton(new Rect(r.xMax - 36, stage.center.y - 20, 28, 40), ">", accent, false, 18)) index = Wrap(index + 1, n);
+
+        float y = stage.yMax + 6;
+        Shadowed(new Rect(r.x, y, r.width, 28), def.displayName.ToUpperInvariant(), Style(22, FontStyle.Bold, TextAnchor.MiddleCenter, Color.white));
+        y += 28;
+        if (!string.IsNullOrEmpty(def.tagline))
+            GUI.Label(new Rect(r.x + 8, y, r.width - 16, 18), def.tagline, Style(12, FontStyle.Italic, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.75f)));
+        y += 20;
+        string main = def.mainHand != null ? def.mainHand.displayName : "Fist";
+        string off = def.offHand != null ? def.offHand.displayName : "Fist";
+        GUI.Label(new Rect(r.x, y, r.width, 18), main + "  +  " + off, Style(13, FontStyle.Bold, TextAnchor.MiddleCenter, Gold));
+        y += 24;
+
+        StatBar(new Rect(r.x + 14, y, r.width - 28, 10), "HEALTH", Mathf.InverseLerp(70f, 130f, def.maxHealth), accent); y += 16;
+        StatBar(new Rect(r.x + 14, y, r.width - 28, 10), "POWER", Mathf.InverseLerp(0.8f, 1.25f, def.strength), accent); y += 16;
+        StatBar(new Rect(r.x + 14, y, r.width - 28, 10), "SPEED", Mathf.InverseLerp(1.6f, 2.8f, def.walkSpeed), accent); y += 16;
+        StatBar(new Rect(r.x + 14, y, r.width - 28, 10), "ARMOUR", ArmorScore(def), accent);
         return index;
+    }
+
+    void StatBar(Rect r, string label, float t, Color accent)
+    {
+        GUI.Label(new Rect(r.x, r.y - 4, 70, r.height + 8), label, Style(10, FontStyle.Bold, TextAnchor.MiddleLeft, new Color(1f, 1f, 1f, 0.7f)));
+        var bar = new Rect(r.x + 70, r.y, r.width - 70, r.height);
+        MenuArt.Fill(bar, new Color(1f, 1f, 1f, 0.12f));
+        MenuArt.Fill(new Rect(bar.x, bar.y, bar.width * Mathf.Clamp(t, 0.06f, 1f), bar.height), accent);
+    }
+
+    /// <summary>0..1 from what the four regions are covered with (plate counts most).</summary>
+    static float ArmorScore(FighterDefinition f)
+    {
+        float Score(ArmorMaterial m) => m == ArmorMaterial.Plate ? 1f : m == ArmorMaterial.Mail ? 0.75f : m == ArmorMaterial.Leather ? 0.45f : m == ArmorMaterial.Cloth ? 0.15f : 0f;
+        return (Score(f.headArmor) + Score(f.torsoArmor) * 1.5f + Score(f.armArmor) + Score(f.legArmor)) / 4.5f;
+    }
+
+    /// <summary>Label above, then &lt; name &gt;.</summary>
+    int Stepper<T>(Rect r, string label, System.Collections.Generic.List<T> list, int index, System.Func<T, string> name) where T : Object
+    {
+        int n = list.Count;
+        index = Wrap(index, n);
+        GUI.Label(new Rect(r.x, r.y - 18, r.width, 18), label, Style(11, FontStyle.Bold, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, 0.7f)));
+        MenuArt.Fill(r, PanelColor);
+        if (FlatButton(new Rect(r.x, r.y, 34, r.height), "<", Gold, false, 16)) index = Wrap(index - 1, n);
+        if (FlatButton(new Rect(r.xMax - 34, r.y, 34, r.height), ">", Gold, false, 16)) index = Wrap(index + 1, n);
+        GUI.Label(new Rect(r.x + 34, r.y, r.width - 68, r.height), n > 0 ? name(list[index]) : "(none)", Style(15, FontStyle.Bold));
+        return index;
+    }
+
+    /// <summary>Every fighter's head in a row: click picks the left fighter, right-click the right one.</summary>
+    void RosterStrip(float w, float y)
+    {
+        int n = database.fighters.Count;
+        if (n == 0) return;
+        float size = Mathf.Min(40f, (w - 40f) / n - 4f), step = size + 4f;
+        float x0 = w * 0.5f - step * n * 0.5f + 2f;
+        string hovered = null;
+        for (int i = 0; i < n; i++)
+        {
+            var box = new Rect(x0 + i * step, y, size, size);
+            var def = database.fighters[i];
+            bool p1 = i == playerIndex, p2 = i == opponentIndex;
+            MenuArt.Fill(box, PanelColor);
+            MenuArt.Head(new Rect(box.x + 3, box.y + 3, box.width - 6, box.height - 6), def);
+            if (p1 && p2) { MenuArt.Frame(box, P1Color); MenuArt.Frame(new Rect(box.x + 2, box.y + 2, box.width - 4, box.height - 4), P2Color); }
+            else if (p1) MenuArt.Frame(box, P1Color);
+            else if (p2) MenuArt.Frame(box, P2Color);
+            else MenuArt.Frame(box, new Color(1f, 1f, 1f, 0.15f), 1f);
+
+            var e = Event.current;
+            if (box.Contains(e.mousePosition))
+            {
+                hovered = def.displayName;
+                if (e.type == EventType.MouseDown && (e.button == 0 || e.button == 1))
+                {
+                    if (e.button == 0) playerIndex = i; else opponentIndex = i;
+                    e.Use();
+                }
+            }
+        }
+        string caption = hovered ?? "click = left fighter · right-click = right fighter";
+        GUI.Label(new Rect(0, y - 18, w, 16), caption, Style(11, hovered != null ? FontStyle.Bold : FontStyle.Normal, TextAnchor.MiddleCenter, new Color(1f, 1f, 1f, hovered != null ? 0.95f : 0.55f)));
     }
 
     void DrawHud(float w)
@@ -281,7 +443,9 @@ public class MatchManager : MonoBehaviour
         bool mine = f == player;
         string notice = (mine ? playerNoticeUntil : enemyNoticeUntil) > Time.unscaledTime ? (mine ? playerNotice : enemyNotice) : null;
         if (notice != null) status += "   " + notice;
-        GUI.Label(label, rightAligned ? status.Trim() + "   " + f.Definition.displayName : f.Definition.displayName + status, normal);
+        string name = f.Definition.displayName;
+        if (twoPlayer) name = mine ? "P1  " + name : name + "  P2";
+        GUI.Label(label, rightAligned ? status.Trim() + "   " + name : name + status, normal);
     }
 
     static readonly PartKind[] ArmorRegions = { PartKind.Head, PartKind.Torso, PartKind.Arm, PartKind.Leg };

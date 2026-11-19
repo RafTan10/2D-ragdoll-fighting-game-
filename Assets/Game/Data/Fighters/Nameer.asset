@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Nameer
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Nameer
+  stock: 0
+  tagline: 'the duellist: quickest feet, flurry of blades'
   head: {fileID: 21300000, guid: 0f77846da4c9b274f8b87bd8d2ee59c0, type: 3}
   torso: {fileID: 21300000, guid: 42721872bd0b382489cbb6baf07b62ef, type: 3}
   upperArm: {fileID: 21300000, guid: fb5c6d0bf8fa55845ae43f28977d6355, type: 3}

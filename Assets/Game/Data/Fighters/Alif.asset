@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Alif
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Alif
+  stock: 0
+  tagline: 'the senior developer: ships hits fast'
   head: {fileID: 21300000, guid: 529061b38f9ee8142ac0198a42574daa, type: 3}
   torso: {fileID: 21300000, guid: f07dec4d549eb694dba48fb8faa981dc, type: 3}
   upperArm: {fileID: 21300000, guid: 475c993bb80320e49a4cb551de68a9b7, type: 3}

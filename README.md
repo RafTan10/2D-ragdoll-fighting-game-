@@ -69,6 +69,15 @@ Three new stages recreated from **BRAC University**'s campus, plus the original 
 
 Extras: `H` shows hitboxes, `B` cycles blood (off / low / normal), `F3` logs every hit.
 
+**Two players, one keyboard.** Pick **2 PLAYERS** on the menu (or press `Tab`) for an even fight with no handicaps:
+
+| | Move back / forward | Jump | Lunge | Left hand | Right hand | Gamepad |
+|---|---|---|---|---|---|---|
+| **Player 1** (left) | `A` / `D` | `W` | Left `Shift` | `F` | `G` | first pad |
+| **Player 2** (right) | `→` / `←` | `↑` | Right `Shift` | `K` | `L` | second pad |
+
+On the menu, `A` / `D` change the left fighter and `←` / `→` the right one. You can also click a face in the roster strip (right-click for the right side).
+
 ## Play it
 
 1. Install **Unity 6000.6.6f1** (URP) through Unity Hub.

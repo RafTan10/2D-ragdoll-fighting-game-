@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Akib
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Akib
+  stock: 0
+  tagline: 'the accountant: crunches numbers and skulls'
   head: {fileID: 21300000, guid: 5e9e9d79fe22e9a4abec953637e9f9d3, type: 3}
   torso: {fileID: 21300000, guid: 202c1cd5a243b294fa8d439c31fa8ff7, type: 3}
   upperArm: {fileID: 21300000, guid: 17b28e78b74aba84e87e83962103336b, type: 3}

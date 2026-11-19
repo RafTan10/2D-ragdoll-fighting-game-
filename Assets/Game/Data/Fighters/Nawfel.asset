@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Nawfel
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Nawfel
+  stock: 0
+  tagline: 'the tank: slow, but hits like a truck'
   head: {fileID: 21300000, guid: 3c641680d6c7bad4f8a9303954c7dafb, type: 3}
   torso: {fileID: 21300000, guid: 49202d99bbd37874a847ed87cf044e9f, type: 3}
   upperArm: {fileID: 21300000, guid: 046bf970844e4114eb55562ddc01df39, type: 3}

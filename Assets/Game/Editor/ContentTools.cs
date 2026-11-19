@@ -117,7 +117,12 @@ public static class ContentTools
         if (isNew && def.mainHand == null) def.mainHand = FindWeapon(db, "Sword");
         if (isNew && def.offHand == null && string.IsNullOrEmpty(offWeapon)) def.offHand = FindWeapon(db, "Shield");
 
-        if (!db.fighters.Contains(def)) db.fighters.Add(def);
+        if (!db.fighters.Contains(def))
+        {
+            // Custom fighters (friends) come first in the menu; the stock Knight / Barbarian / Ronin stay at the end.
+            int firstStock = db.fighters.FindIndex(f => f != null && f.stock);
+            if (firstStock < 0) db.fighters.Add(def); else db.fighters.Insert(firstStock, def);
+        }
         EditorUtility.SetDirty(def);
         EditorUtility.SetDirty(db);
         AssetDatabase.SaveAssets();

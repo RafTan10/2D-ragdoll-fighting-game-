@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Knight
   m_EditorClassIdentifier: Assembly-CSharp::FighterDefinition
   displayName: Knight
+  stock: 1
+  tagline: full plate; raise the shield and blades bounce off
   head: {fileID: 21300000, guid: 24ef717301ca2174f84c5dca3733576d, type: 3}
   torso: {fileID: 21300000, guid: fa4a2860621243b41bfbea1c40e4f9f5, type: 3}
   upperArm: {fileID: 21300000, guid: c283112b6f35629418e037bb5cd3be11, type: 3}
@@ -20,6 +22,8 @@ MonoBehaviour:
   upperLeg: {fileID: 21300000, guid: 073a2a3d310cda546b1b6b618ff3a142, type: 3}
   lowerLeg: {fileID: 21300000, guid: 9309eb2d0c0c36f4ebc2e0b531d01803, type: 3}
   cape: {fileID: 21300000, guid: 148b6b7c6cfe2ca4b9097d670877f6a3, type: 3}
+  skirt: {fileID: 0}
+  handProp: {fileID: 0}
   maxHealth: 100
   strength: 1
   walkSpeed: 2.1
