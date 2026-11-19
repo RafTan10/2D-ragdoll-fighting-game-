@@ -7,9 +7,10 @@ New-Item -ItemType Directory -Force $Out | Out-Null
 
 $W = 480; $H = 270; $delay = 7   # ~14 fps
 $clips = @(
-    @{ dir = "clip1"; caption = "TANIM  vs  TAHSEEN"; place = "BRACU ATRIUM" }
-    @{ dir = "clip2"; caption = "AKIB  vs  KNIGHT"; place = "BRACU SPORTS HALL" }
-    @{ dir = "clip3"; caption = "NUHA  vs  BARBARIAN"; place = "BRACU HALL" }
+    # still = which of the clip's 60 frames becomes the README still (pick one with both heads in view)
+    @{ dir = "clip1"; caption = "TANIM  vs  TAHSEEN"; place = "BRACU ATRIUM"; still = 26 }
+    @{ dir = "clip2"; caption = "AKIB  vs  KNIGHT"; place = "BRACU SPORTS HALL"; still = 20 }
+    @{ dir = "clip3"; caption = "NUHA  vs  BARBARIAN"; place = "BRACU HALL"; still = 26 }
 )
 $white = [System.Drawing.Brushes]::White
 $gold = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 232, 186, 74))
@@ -51,7 +52,7 @@ foreach ($clip in $clips) {
         $sz = $g.MeasureString($clip.place, $small); Shadowed $g $clip.place $small $gold ($W - $sz.Width - 8) 4
         $g.Dispose()
         $gif.AddFrame($f, $delay)
-        if ($n -eq 26) { $f.Save((Join-Path $Out ($clip.dir + ".png"))) }   # a still for the README
+        if ($n -eq $clip.still) { $f.Save((Join-Path $Out ($clip.dir + ".png"))) }   # a still for the README
         $f.Dispose(); $n++
     }
 }
